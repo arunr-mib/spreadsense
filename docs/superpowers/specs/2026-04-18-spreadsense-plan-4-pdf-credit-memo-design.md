@@ -101,10 +101,25 @@ All fields nullable — the form can be partially filled and saved at any time.
 
 **Key line selection for Financial Analysis table:**
 
-| Statement | Fields included |
-|-----------|----------------|
+`SpreadLineItem` rows are queried by `spread_period_id` (FK) + `statement` column ("IS" or "CF") + `rma_field_key` in the allowed set. The result is converted to a `dict[rma_field_key → value]` for the template. Example query pattern:
+
+```python
+items = await db.execute(
+    select(SpreadLineItem)
+    .where(
+        SpreadLineItem.spread_period_id == period.id,
+        SpreadLineItem.statement == "IS",
+        SpreadLineItem.rma_field_key.in_(IS_KEY_FIELDS),
+    )
+)
+```
+
+| Statement | `rma_field_key` values included |
+|-----------|-------------------------------|
 | IS | `net_sales`, `gross_profit`, `ebitda`, `ebit`, `interest_expense`, `net_income` |
 | CF | `cf_net_income`, `add_depreciation_amortization`, `capital_expenditures`, `uca_cfads`, `total_debt_service` |
+
+Define these as module-level constants (`IS_KEY_FIELDS`, `CF_KEY_FIELDS`) in `service.py`.
 
 **`render_pdf(spread_id, db)`** → `bytes` — calls `build_memo_context`, renders `credit_memo.html` via Jinja2, passes HTML string to `weasyprint.HTML(string=html).write_pdf()`. Returns raw PDF bytes.
 
@@ -115,6 +130,8 @@ GET  /spreads/{id}/memo/meta    → CreditMemoMetaRead | {}  (200 always)
 PUT  /spreads/{id}/memo/meta    → CreditMemoMetaRead        (upsert)
 GET  /spreads/{id}/memo/pdf     → StreamingResponse(application/pdf)
 ```
+
+**Note on GET /memo/meta:** When no row exists yet, return an empty dict `{}` (HTTP 200) rather than `null`. FastAPI cannot serialize `None` as `{}` by default — the router must explicitly `return {}` when `get_meta()` returns `None`. The frontend treats any response as the initial form state, defaulting all fields to `null`.
 
 All three endpoints require authentication. Analysts see only their own spreads (same ownership pattern as analytics/narrative — 404 for others).
 
@@ -150,7 +167,7 @@ The PDF uses the SpreadSense Sand & Amber palette — consistent with the web ap
 
 ### Sections
 
-1. **Executive Summary** — deal name, borrower name, 2-sentence summary assembled from meta fields, recommendation badge (colour-coded by value), risk rating badge, top 3 ratios (DSCR, Leverage, Current Ratio) as inline highlights.
+1. **Executive Summary** — deal name, borrower name, recommendation badge (colour-coded: green=approve, amber=approve with conditions, red=decline), risk rating badge, top 3 ratios (DSCR, Leverage, Current Ratio) as inline highlights. The summary sentence is assembled from available fields: `"{borrower.name} is requesting a {facility_type} of {facility_amount} for the purpose of {facility_purpose}."` — any `None` field is replaced with `[Information not provided]` inline.
 
 2. **Borrower Overview** — company name (from `borrowers.name`); all other fields (`[Information not provided]`): industry, business description, ownership structure, management team, years in business, relationship history.
 
