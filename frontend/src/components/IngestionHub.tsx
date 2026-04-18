@@ -52,7 +52,7 @@ export default function IngestionHub({ spreadId, onJobReady, onClose }: Props) {
 
         {mutation.isPending && (
           <div className="mt-4 text-center">
-            <p className="text-sm text-indigo-600 animate-pulse">Extracting with Claude AI...</p>
+            <p className="text-sm text-[var(--accent)] animate-pulse">Extracting with Claude AI...</p>
           </div>
         )}
         {mutation.isError && (

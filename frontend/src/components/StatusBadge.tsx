@@ -1,15 +1,15 @@
 import type { Spread } from '../types'
 
 const STYLES: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  completed: 'bg-blue-100 text-blue-700',
-  reviewed: 'bg-green-100 text-green-700',
-  exported: 'bg-purple-100 text-purple-700',
+  draft: 'bg-[var(--bg-card)] text-[var(--text-secondary)]',
+  completed: 'bg-[var(--bg-card)] text-[var(--accent)] border border-[var(--border)]',
+  reviewed: 'bg-[var(--pass)] bg-opacity-10 text-[var(--pass)]',
+  exported: 'bg-[var(--bg-card)] text-[var(--text-secondary)]',
 }
 
 export default function StatusBadge({ status }: { status: Spread['status'] }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${STYLES[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${STYLES[status] ?? 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}>
       {status}
     </span>
   )

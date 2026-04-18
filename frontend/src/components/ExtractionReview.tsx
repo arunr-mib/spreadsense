@@ -77,7 +77,7 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             File: <span className="font-mono">{job.filename}</span>
             {unresolvedFlaggedCount > 0 && (
-              <span className="ml-2 text-amber-600 font-medium">
+              <span className="ml-2 text-[var(--near)] font-medium">
                 ⚠ {unresolvedFlaggedCount} field{unresolvedFlaggedCount > 1 ? 's' : ''} need review — accept or correct to enable confirm
               </span>
             )}
@@ -104,7 +104,7 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
                   const needsReview = f.flagged && f.value != null && !isResolved
                   return (
                     <tr key={f.compositeKey}
-                        className={needsReview ? 'bg-amber-50' : isResolved ? 'bg-green-50' : ''}>
+                        className={needsReview ? 'bg-[var(--bg-page)]' : isResolved ? 'bg-[var(--bg-page)]' : ''}>
                       <td className="px-3 py-2 text-[var(--text-secondary)] font-mono">{f.statement}</td>
                       <td className="px-3 py-2 text-[var(--text-primary)] font-mono text-xs">{f.key}</td>
                       <td className="px-3 py-2 text-right text-[var(--text-primary)]">
@@ -121,7 +121,7 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
                       </td>
                       <td className="px-3 py-2 text-right">
                         <span className={`text-xs font-medium ${
-                          isResolved ? 'text-green-600' : f.flagged ? 'text-amber-600' : 'text-green-600'
+                          isResolved ? 'text-[var(--pass)]' : f.flagged ? 'text-[var(--near)]' : 'text-[var(--pass)]'
                         }`}>
                           {(f.confidence * 100).toFixed(0)}%
                           {f.flagged && !isResolved && ' ⚠'}
@@ -133,11 +133,11 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
                           <div className="flex gap-1 justify-end">
                             <button
                               onClick={() => handleAccept(f.compositeKey)}
-                              className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                              className="text-xs px-2 py-0.5 bg-[var(--pass)] text-white rounded hover:opacity-90"
                             >Accept</button>
                             <button
                               onClick={() => handleOverrideConfirm(f.compositeKey)}
-                              className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                              className="text-xs px-2 py-0.5 bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border)] rounded hover:bg-[var(--bg-page)]"
                             >Use input</button>
                           </div>
                         )}
