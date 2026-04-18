@@ -178,6 +178,12 @@ async def build_memo_context(
 
 async def render_pdf(spread_id: int, user: User, db: AsyncSession) -> bytes:
     """Build context, render Jinja2 template, return WeasyPrint PDF bytes."""
+    # On macOS, homebrew libs are not on the default dyld search path.
+    # Setting DYLD_LIBRARY_PATH before dlopen (which happens on first import)
+    # allows cffi to locate libgobject, libpango, etc.
+    import os
+    if os.path.isdir("/opt/homebrew/lib"):
+        os.environ.setdefault("DYLD_LIBRARY_PATH", "/opt/homebrew/lib")
     import weasyprint
     from jinja2 import Environment, FileSystemLoader
 

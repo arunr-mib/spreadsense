@@ -83,3 +83,31 @@ async def test_meta_cross_user_access_denied(client, db, memo_spread):
     resp = await client.get(f"/spreads/{memo_spread.id}/memo/meta",
                             headers=other_headers)
     assert resp.status_code == 404
+
+
+async def test_export_pdf_returns_pdf_bytes(client, memo_headers, memo_spread):
+    """GET /memo/pdf returns application/pdf with non-empty content."""
+    resp = await client.get(f"/spreads/{memo_spread.id}/memo/pdf",
+                            headers=memo_headers)
+    assert resp.status_code == 200
+    assert "application/pdf" in resp.headers["content-type"]
+    assert len(resp.content) > 1000   # a real PDF is always >1KB
+
+
+async def test_export_pdf_404_for_missing_spread(client, memo_headers):
+    resp = await client.get("/spreads/99999/memo/pdf", headers=memo_headers)
+    assert resp.status_code == 404
+
+
+async def test_export_pdf_analyst_cannot_access_other_spread(client, db, memo_spread):
+    """Analyst cannot export another analyst's spread PDF — returns 404."""
+    other = User(email="pdf_other@bank.com", full_name="PDF Other",
+                 hashed_password=hash_password("pass789"), role=UserRole.analyst)
+    db.add(other)
+    await db.flush()
+    resp = await client.post("/auth/login",
+        json={"email": "pdf_other@bank.com", "password": "pass789"})
+    other_headers = {"Authorization": f"Bearer {resp.json()['access_token']}"}
+    resp = await client.get(f"/spreads/{memo_spread.id}/memo/pdf",
+                            headers=other_headers)
+    assert resp.status_code == 404
