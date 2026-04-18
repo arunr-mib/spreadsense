@@ -114,3 +114,16 @@ async def test_version_list_descending(client, narr_headers, narr_spread_with_pe
     assert len(versions) == 2
     assert versions[0]["version"] == 2
     assert versions[1]["version"] == 1
+
+
+async def test_analyst_cannot_access_other_users_narrative(client, db, narr_spread_with_period):
+    """Analyst cannot access another analyst's spread narrative — returns 404."""
+    from app.core.security import hash_password
+    other = User(email="other_narr@bank.com", full_name="Other Analyst",
+                 hashed_password=hash_password("pass456"), role=UserRole.analyst)
+    db.add(other)
+    await db.flush()
+    resp = await client.post("/auth/login", json={"email": "other_narr@bank.com", "password": "pass456"})
+    other_headers = {"Authorization": f"Bearer {resp.json()['access_token']}"}
+    resp = await client.get(f"/spreads/{narr_spread_with_period.id}/narrative", headers=other_headers)
+    assert resp.status_code == 404

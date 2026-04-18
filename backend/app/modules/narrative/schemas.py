@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
@@ -15,4 +15,4 @@ class NarrativeVersionRead(BaseModel):
 
 
 class NarrativeSaveRequest(BaseModel):
-    content: str
+    content: str = Field(min_length=1)
