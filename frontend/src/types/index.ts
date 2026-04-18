@@ -102,3 +102,16 @@ export interface NarrativeVersion {
   created_by_name: string
   created_at: string
 }
+
+export interface CreditMemoMeta {
+  id?: number
+  spread_id?: number
+  recommendation: string | null
+  risk_rating: string | null
+  facility_type: string | null
+  facility_amount: number | null
+  facility_purpose: string | null
+  facility_maturity: string | null
+  collateral: string | null
+  updated_at?: string
+}
