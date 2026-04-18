@@ -18,8 +18,9 @@ class SpreadLineItem(Base):
     value: Mapped[Optional[float]] = mapped_column(Numeric(18, 2), nullable=True)
     source: Mapped[str] = mapped_column(String(20), nullable=False, default="manual")
     confidence_score: Mapped[Optional[float]] = mapped_column(Numeric(4, 3), nullable=True)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=True,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )

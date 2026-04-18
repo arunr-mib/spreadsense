@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +33,8 @@ async def list_periods(spread_id: int,
 
 @router.get("/spreads/{spread_id}/periods/{period_id}/line-items",
             response_model=list[SpreadLineItemRead])
-async def get_line_items(spread_id: int, period_id: int, statement: str,
+async def get_line_items(spread_id: int, period_id: int,
+                         statement: Literal["IS", "BS", "CF"],
                          db: AsyncSession = Depends(get_db),
                          _: User = Depends(get_current_user)):
     return await service.get_line_items(period_id, statement, db)
