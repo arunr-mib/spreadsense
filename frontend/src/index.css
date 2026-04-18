@@ -1,7 +1,21 @@
 @import "tailwindcss";
 
+:root {
+  --bg-page: #f5f0e8;
+  --bg-card: #ede5d5;
+  --bg-strip: #292218;
+  --accent: #d97706;
+  --text-primary: #1c1409;
+  --text-secondary: #92805a;
+  --border: #ddd5c0;
+  --pass: #16a34a;
+  --breach: #dc2626;
+  --near: #f59e0b;
+}
+
 body {
   margin: 0;
+  background-color: var(--bg-page);
 }
 
 #root {

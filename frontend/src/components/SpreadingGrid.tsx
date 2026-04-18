@@ -40,7 +40,7 @@ export default function SpreadingGrid({ spreadId, periodId, statement }: Props) 
     setEditingKey(null)
   }, [editValue, mutation])
 
-  if (isLoading) return <p className="text-gray-400 text-sm p-4">Loading...</p>
+  if (isLoading) return <p className="text-[var(--text-secondary)] text-sm p-4">Loading...</p>
   if (isError) return <p className="text-red-500 text-sm p-4">Failed to load grid data.</p>
 
   return (
@@ -49,20 +49,20 @@ export default function SpreadingGrid({ spreadId, periodId, statement }: Props) 
         {items.map((item) => (
           <tr
             key={item.rma_field_key}
-            className={`border-b ${item.computed ? 'bg-gray-50 font-semibold' : 'bg-white'}`}
+            className={`border-b border-[var(--border)] ${item.computed ? 'bg-[var(--bg-page)] font-semibold' : 'bg-[var(--bg-card)]'}`}
           >
-            <td className="px-4 py-2 text-gray-700 w-64">
+            <td className="px-4 py-2 text-[var(--text-primary)] w-64">
               {item.label}
             </td>
             <td className="px-4 py-2 text-right w-40">
               {item.computed ? (
-                <span className="text-gray-800">
+                <span className="text-[var(--text-primary)]">
                   {item.value != null ? item.value.toLocaleString() : '—'}
                 </span>
               ) : editingKey === item.rma_field_key ? (
                 <input
                   autoFocus
-                  className="w-full text-right border rounded px-2 py-0.5 text-sm"
+                  className="w-full text-right border border-[var(--border)] rounded px-2 py-0.5 text-sm"
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={() => handleBlur(item)}
@@ -70,19 +70,19 @@ export default function SpreadingGrid({ spreadId, periodId, statement }: Props) 
                 />
               ) : (
                 <button
-                  className="w-full text-right hover:bg-indigo-50 rounded px-2 py-0.5"
+                  className="w-full text-right hover:bg-[var(--bg-page)] rounded px-2 py-0.5"
                   onClick={() => {
                     setEditingKey(item.rma_field_key)
                     setEditValue(item.value != null ? String(item.value) : '')
                   }}
                 >
-                  {item.value != null ? item.value.toLocaleString() : <span className="text-gray-300">—</span>}
+                  {item.value != null ? item.value.toLocaleString() : <span className="text-[var(--text-secondary)]">—</span>}
                 </button>
               )}
             </td>
             <td className="px-2 py-2 w-12 text-center">
               {item.source && (
-                <span className="text-xs px-1 py-0.5 rounded bg-gray-100 text-gray-500 font-mono">
+                <span className="text-xs px-1 py-0.5 rounded bg-[var(--bg-page)] text-[var(--text-secondary)] font-mono">
                   {SOURCE_BADGE[item.source] ?? item.source}
                 </span>
               )}

@@ -70,11 +70,11 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
            onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Extraction Review</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+        <div className="px-6 py-4 border-b border-[var(--border)]">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Extraction Review</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             File: <span className="font-mono">{job.filename}</span>
             {unresolvedFlaggedCount > 0 && (
               <span className="ml-2 text-amber-600 font-medium">
@@ -86,15 +86,15 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
 
         <div className="overflow-y-auto flex-1 px-6 py-4">
           {allFields.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-8">No fields extracted.</p>
+            <p className="text-[var(--text-secondary)] text-sm text-center py-8">No fields extracted.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b sticky top-0">
+              <thead className="bg-[var(--bg-page)] border-b border-[var(--border)] sticky top-0">
                 <tr>
-                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Stmt</th>
-                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Field</th>
-                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Value</th>
-                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Confidence</th>
+                  <th className="text-left px-3 py-2 text-[var(--text-secondary)] font-medium">Stmt</th>
+                  <th className="text-left px-3 py-2 text-[var(--text-secondary)] font-medium">Field</th>
+                  <th className="text-right px-3 py-2 text-[var(--text-secondary)] font-medium">Value</th>
+                  <th className="text-right px-3 py-2 text-[var(--text-secondary)] font-medium">Confidence</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
@@ -105,9 +105,9 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
                   return (
                     <tr key={f.compositeKey}
                         className={needsReview ? 'bg-amber-50' : isResolved ? 'bg-green-50' : ''}>
-                      <td className="px-3 py-2 text-gray-400 font-mono">{f.statement}</td>
-                      <td className="px-3 py-2 text-gray-700 font-mono text-xs">{f.key}</td>
-                      <td className="px-3 py-2 text-right text-gray-900">
+                      <td className="px-3 py-2 text-[var(--text-secondary)] font-mono">{f.statement}</td>
+                      <td className="px-3 py-2 text-[var(--text-primary)] font-mono text-xs">{f.key}</td>
+                      <td className="px-3 py-2 text-right text-[var(--text-primary)]">
                         {needsReview ? (
                           <input
                             type="number"
@@ -116,7 +116,7 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
                             onChange={(e) => handleOverrideChange(f.compositeKey, e.target.value)}
                           />
                         ) : (
-                          f.value != null ? f.value.toLocaleString() : <span className="text-gray-300">—</span>
+                          f.value != null ? f.value.toLocaleString() : <span className="text-[var(--text-secondary)]">—</span>
                         )}
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -150,9 +150,9 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
           )}
         </div>
 
-        <div className="px-6 py-4 border-t flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-700">Import into period:</label>
+            <label className="text-sm text-[var(--text-primary)]">Import into period:</label>
             <select
               value={selectedPeriodId}
               onChange={(e) => setSelectedPeriodId(Number(e.target.value))}
@@ -164,13 +164,13 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
             </select>
           </div>
           <div className="flex gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
               Cancel
             </button>
             <button
               disabled={!canConfirm || mutation.isPending}
               onClick={() => mutation.mutate()}
-              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm bg-[var(--accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
             >
               {mutation.isPending ? 'Importing...' : 'Confirm & Import'}
             </button>

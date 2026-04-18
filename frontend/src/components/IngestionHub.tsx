@@ -23,17 +23,17 @@ export default function IngestionHub({ spreadId, onJobReady, onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
          onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg"
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-xl p-6 w-full max-w-lg"
            onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-1">Import Financial Statements</h2>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-[var(--text-secondary)] mb-6">
           Upload a PDF, Word, or Excel financial statement. Claude AI will extract the figures.
         </p>
 
         {/* Drop zone */}
         <div
           className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-            dragOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'
+            dragOver ? 'border-[var(--accent)] bg-[var(--bg-page)]' : 'border-[var(--border)] hover:border-[var(--text-secondary)]'
           }`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
@@ -46,8 +46,8 @@ export default function IngestionHub({ spreadId, onJobReady, onClose }: Props) {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
           />
           <div className="text-4xl mb-2">📄</div>
-          <p className="text-sm font-medium text-gray-700">Drop file here or click to browse</p>
-          <p className="text-xs text-gray-400 mt-1">PDF · Word (.docx) · Excel (.xlsx) — max 50 MB</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">Drop file here or click to browse</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">PDF · Word (.docx) · Excel (.xlsx) — max 50 MB</p>
         </div>
 
         {mutation.isPending && (
@@ -60,7 +60,7 @@ export default function IngestionHub({ spreadId, onJobReady, onClose }: Props) {
         )}
 
         <div className="flex justify-end mt-6">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Cancel
           </button>
         </div>

@@ -56,24 +56,24 @@ export default function SpreadDetailPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-4 flex items-center gap-4">
-        <button onClick={() => navigate('/')} className="text-gray-400 hover:text-gray-700 text-sm">
+      <header className="bg-[var(--bg-card)] border-b border-[var(--border)] px-6 py-4 flex items-center gap-4">
+        <button onClick={() => navigate('/')} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm">
           ← Dashboard
         </button>
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">{spread?.deal_name ?? 'Spread'}</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Spread #{spreadId}</p>
+          <h1 className="text-lg font-semibold text-[var(--text-primary)]">{spread?.deal_name ?? 'Spread'}</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Spread #{spreadId}</p>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Period selector */}
         <div className="flex items-center gap-3 mb-6 overflow-x-auto">
-          <span className="text-sm text-gray-500 shrink-0">Period:</span>
+          <span className="text-sm text-[var(--text-secondary)] shrink-0">Period:</span>
           {periodsLoading ? (
-            <span className="text-gray-400 text-sm">Loading...</span>
+            <span className="text-[var(--text-secondary)] text-sm">Loading...</span>
           ) : (
             periods.map((p) => (
               <button
@@ -81,8 +81,8 @@ export default function SpreadDetailPage() {
                 onClick={() => setActivePeriodId(p.id)}
                 className={`px-3 py-1 rounded text-sm shrink-0 ${
                   activePeriodId === p.id
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white border text-gray-700 hover:bg-gray-50'
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-page)]'
                 }`}
               >
                 FY {p.fiscal_year}
@@ -94,13 +94,13 @@ export default function SpreadDetailPage() {
           )}
           <button
             onClick={() => setShowAddPeriod(!showAddPeriod)}
-            className="px-3 py-1 rounded text-sm border border-dashed text-gray-400 hover:text-indigo-600 hover:border-indigo-400 shrink-0"
+            className="px-3 py-1 rounded text-sm border border-dashed text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] shrink-0"
           >
             + Add Period
           </button>
           <button
             onClick={() => setShowIngestion(true)}
-            className="px-3 py-1 rounded text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 shrink-0"
+            className="px-3 py-1 rounded text-sm bg-[var(--bg-page)] text-[var(--accent)] border border-[var(--border)] hover:bg-[var(--bg-card)] shrink-0"
           >
             📎 Import Document
           </button>
@@ -108,7 +108,7 @@ export default function SpreadDetailPage() {
 
         {/* Add Period form */}
         {showAddPeriod && (
-          <div className="mb-4 flex items-center gap-3 bg-white border rounded-lg p-4 w-fit">
+          <div className="mb-4 flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 w-fit">
             <input
               type="number"
               placeholder="Fiscal Year (e.g. 2023)"
@@ -127,7 +127,7 @@ export default function SpreadDetailPage() {
             <button
               disabled={!newYear || addPeriodMutation.isPending}
               onClick={() => addPeriodMutation.mutate()}
-              className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
+              className="px-3 py-1 bg-[var(--accent)] text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
             >
               Add
             </button>
@@ -145,8 +145,8 @@ export default function SpreadDetailPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm rounded-t-lg font-medium ${
                 activeTab === tab
-                  ? 'bg-white border border-b-white text-indigo-600'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  ? 'bg-[var(--bg-card)] border border-b-[var(--bg-card)] text-[var(--accent)]'
+                  : 'bg-[var(--bg-page)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'
               }`}
             >
               {STATEMENT_LABELS[tab]}
@@ -155,7 +155,7 @@ export default function SpreadDetailPage() {
         </div>
 
         {/* Grid */}
-        <div className="bg-white border rounded-b-lg rounded-tr-lg overflow-hidden">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-b-lg rounded-tr-lg overflow-hidden">
           {activePeriodId ? (
             <SpreadingGrid
               spreadId={spreadId}
@@ -163,7 +163,7 @@ export default function SpreadDetailPage() {
               statement={activeTab}
             />
           ) : (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-[var(--text-secondary)]">
               <p>Add a fiscal year period above to start entering data.</p>
             </div>
           )}

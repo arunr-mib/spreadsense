@@ -16,25 +16,25 @@ export default function DealDashboardPage() {
   const handleLogout = () => { logout(); navigate('/login', { replace: true }) }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-[var(--bg-page)]">
+      <header className="bg-[var(--bg-strip)] px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">Deal Dashboard</h1>
-          <p className="text-xs text-gray-500 mt-0.5">SpreadSense</p>
+          <h1 className="text-lg font-semibold text-white">Deal Dashboard</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">SpreadSense</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">{user?.full_name}</span>
-          <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-gray-700">Sign out</button>
+          <span className="text-sm text-[var(--text-secondary)]">{user?.full_name}</span>
+          <button onClick={handleLogout} className="text-sm text-[var(--text-secondary)] hover:text-[var(--bg-page)]">Sign out</button>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Spreads {!isLoading && <span className="text-gray-400 font-normal text-base">({spreads.length})</span>}
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            Spreads {!isLoading && <span className="text-[var(--text-secondary)] font-normal text-base">({spreads.length})</span>}
           </h2>
           <button onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 font-medium">
+            className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 font-medium">
             + New Spread
           </button>
         </div>
@@ -43,28 +43,28 @@ export default function DealDashboardPage() {
           <p className="text-red-500 text-sm">Failed to load spreads. Please refresh the page.</p>
         )}
         {isLoading ? (
-          <p className="text-gray-400 text-sm">Loading...</p>
+          <p className="text-[var(--text-secondary)] text-sm">Loading...</p>
         ) : spreads.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-[var(--text-secondary)]">
             <p className="text-lg">No spreads yet</p>
             <p className="text-sm mt-1">Click &quot;+ New Spread&quot; to get started</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-[var(--bg-page)] border-b border-[var(--border)]">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Deal Name</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Last Updated</th>
+                  <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Deal Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-[var(--text-secondary)]">Last Updated</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {spreads.map((s) => (
-                  <tr key={s.id} onClick={() => navigate(`/spreads/${s.id}`)} className="border-b hover:bg-gray-50 cursor-pointer">
-                    <td className="px-4 py-3 font-medium text-gray-900">{s.deal_name}</td>
+                  <tr key={s.id} onClick={() => navigate(`/spreads/${s.id}`)} className="border-b border-[var(--border)] hover:bg-[var(--bg-page)] cursor-pointer">
+                    <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{s.deal_name}</td>
                     <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
-                    <td className="px-4 py-3 text-gray-500">{new Date(s.updated_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(s.updated_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
