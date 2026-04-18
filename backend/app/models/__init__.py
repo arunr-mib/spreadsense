@@ -9,6 +9,7 @@ from app.models.narrative_version import NarrativeVersion
 from app.models.workflow_comment import WorkflowComment
 from app.models.audit_log import AuditLog
 from app.models.extraction_job import ExtractionJob, ExtractionStatus
+from app.models.credit_memo_meta import CreditMemoMeta
 
 __all__ = [
     "User", "UserRole",
@@ -22,4 +23,5 @@ __all__ = [
     "WorkflowComment",
     "AuditLog",
     "ExtractionJob", "ExtractionStatus",
+    "CreditMemoMeta",
 ]
