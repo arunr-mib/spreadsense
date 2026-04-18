@@ -35,3 +35,114 @@ def test_balance_sheet_validation_fails():
         "total_liabilities_and_equity": 499_000.0,
     }
     assert validate_balance_sheet(values) is False
+
+
+import pytest
+
+@pytest.fixture
+async def analyst_user_sp(db):
+    from app.models.user import User, UserRole
+    from app.core.security import hash_password
+    user = User(email="analyst_sp@bank.com", full_name="Grid Analyst",
+                hashed_password=hash_password("password123"), role=UserRole.analyst)
+    db.add(user)
+    await db.flush()
+    await db.refresh(user)
+    return user
+
+@pytest.fixture
+async def sp_headers(client, analyst_user_sp):
+    resp = await client.post("/auth/login",
+        json={"email": "analyst_sp@bank.com", "password": "password123"})
+    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+@pytest.fixture
+async def spread_id(client, sp_headers, analyst_user_sp, db):
+    from app.models.borrower import Borrower
+    b = Borrower(name="Grid Corp", fiscal_year_end_month=12, created_by=analyst_user_sp.id)
+    db.add(b)
+    await db.flush()
+    await db.refresh(b)
+    resp = await client.post("/spreads/",
+        json={"borrower_id": b.id, "deal_name": "Grid Deal"}, headers=sp_headers)
+    return resp.json()["id"]
+
+async def test_create_period(client, sp_headers, spread_id):
+    resp = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    assert resp.status_code == 201
+    assert resp.json()["fiscal_year"] == 2023
+
+async def test_list_periods(client, sp_headers, spread_id):
+    await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2022, "period_type": "actual"}, headers=sp_headers)
+    await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    resp = await client.get(f"/spreads/{spread_id}/periods", headers=sp_headers)
+    assert resp.status_code == 200
+    assert len(resp.json()) == 2
+
+async def test_duplicate_period_rejected(client, sp_headers, spread_id):
+    await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    resp = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    assert resp.status_code == 409
+
+async def test_upsert_line_item(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    resp = await client.put(
+        f"/spreads/{spread_id}/periods/{pid}/line-items/net_sales",
+        json={"value": 1_000_000.0, "updated_at": None},
+        headers=sp_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["rma_field_key"] == "net_sales"
+    assert resp.json()["value"] == 1_000_000.0
+
+async def test_computed_field_write_rejected(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    resp = await client.put(
+        f"/spreads/{spread_id}/periods/{pid}/line-items/gross_profit",
+        json={"value": 500_000.0, "updated_at": None},
+        headers=sp_headers,
+    )
+    assert resp.status_code == 422  # computed — cannot write directly
+
+async def test_get_line_items_includes_computed(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    await client.put(
+        f"/spreads/{spread_id}/periods/{pid}/line-items/net_sales",
+        json={"value": 1_000_000.0, "updated_at": None}, headers=sp_headers)
+    await client.put(
+        f"/spreads/{spread_id}/periods/{pid}/line-items/cost_of_goods_sold",
+        json={"value": 600_000.0, "updated_at": None}, headers=sp_headers)
+    resp = await client.get(
+        f"/spreads/{spread_id}/periods/{pid}/line-items?statement=IS",
+        headers=sp_headers)
+    assert resp.status_code == 200
+    items = {i["rma_field_key"]: i["value"] for i in resp.json()}
+    assert items["gross_profit"] == 400_000.0  # computed
+
+async def test_balance_sheet_validation(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2023, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    for key, val in [("cash", 200_000.0), ("accounts_receivable", 200_000.0),
+                     ("fixed_assets_net", 100_000.0)]:
+        await client.put(
+            f"/spreads/{spread_id}/periods/{pid}/line-items/{key}",
+            json={"value": val, "updated_at": None}, headers=sp_headers)
+    for key, val in [("long_term_debt", 300_000.0), ("total_equity", 200_000.0)]:
+        await client.put(
+            f"/spreads/{spread_id}/periods/{pid}/line-items/{key}",
+            json={"value": val, "updated_at": None}, headers=sp_headers)
+    resp = await client.get(f"/spreads/{spread_id}/validate", headers=sp_headers)
+    assert resp.status_code == 200
+    assert "balanced" in resp.json() or "periods" in resp.json()
