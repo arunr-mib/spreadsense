@@ -20,7 +20,7 @@ export default function DealDashboardPage() {
       <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Deal Dashboard</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Financial Spreading Tool</p>
+          <p className="text-xs text-gray-500 mt-0.5">SpreadSense</p>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">{user?.full_name}</span>
