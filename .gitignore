@@ -5,3 +5,12 @@ __pycache__/
 .venv/
 dist/
 .env.local
+*.egg-info/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+.DS_Store
+*.sqlite3
+*.pyo
+*.pyd

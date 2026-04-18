@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: fst_user
-      POSTGRES_PASSWORD: fst_pass
-      POSTGRES_DB: fst_db
+      POSTGRES_USER: ${POSTGRES_USER:-fst_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fst_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-fst_db}
     ports:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fst_user -d fst_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fst_user} -d ${POSTGRES_DB:-fst_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,8 +20,8 @@ services:
     ports:
       - "8001:8001"
     environment:
-      DATABASE_URL: postgresql+asyncpg://fst_user:fst_pass@postgres:5432/fst_db
-      JWT_SECRET: change-me-in-production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-fst_user}:${POSTGRES_PASSWORD:-fst_pass}@postgres:5432/${POSTGRES_DB:-fst_db}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-development-only}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 30
     depends_on:
@@ -40,7 +40,7 @@ services:
       - /app/node_modules
     command: npm run dev -- --host 0.0.0.0 --port 5174
     environment:
-      VITE_API_URL: http://localhost:8001
+      API_TARGET: http://backend:8001
 
 volumes:
   postgres_data:
