@@ -4,7 +4,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from app.main import app
+from app.main import app as fastapi_app
 from app.database import Base, get_db
 import app.models  # noqa: F401 — ensure all models are registered with Base
 
@@ -32,6 +32,7 @@ async def engine():
 
 @pytest_asyncio.fixture
 async def db(engine):
+    """Per-test database session that rolls back all changes after each test."""
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as session:
         yield session
@@ -39,14 +40,13 @@ async def db(engine):
 
 
 @pytest_asyncio.fixture
-async def client(engine):
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+async def client(db):
+    """HTTP test client that shares the same DB session as the db fixture."""
 
     async def override_get_db():
-        async with session_factory() as session:
-            yield session
+        yield db
 
-    app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+    async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as c:
         yield c
-    app.dependency_overrides.clear()
+    fastapi_app.dependency_overrides.clear()
