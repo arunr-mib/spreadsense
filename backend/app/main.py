@@ -1,17 +1,12 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from app.modules.auth.router import router as auth_router
-from app.core.deps import get_current_user
-from app.models.user import User
+from app.modules.borrowers.router import router as borrowers_router
 
 app = FastAPI(title="Financial Spreading Tool", version="0.1.0")
 app.include_router(auth_router)
+app.include_router(borrowers_router)
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-
-@app.get("/borrowers/")
-async def borrowers_stub(_: User = Depends(get_current_user)):
-    return []
