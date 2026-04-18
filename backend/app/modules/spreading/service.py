@@ -195,6 +195,16 @@ def _field_statement(key: str) -> Optional[str]:
 
 async def create_adjustment(period_id: int, data: AdjustmentCreate,
                              user: User, db: AsyncSession) -> Adjustment:
+    # Verify the line item belongs to this period
+    li_result = await db.execute(
+        select(SpreadLineItem).where(SpreadLineItem.id == data.spread_line_item_id)
+    )
+    line_item = li_result.scalar_one_or_none()
+    if not line_item:
+        raise HTTPException(status_code=404, detail="Line item not found")
+    if line_item.spread_period_id != period_id:
+        raise HTTPException(status_code=422, detail="Line item does not belong to this period")
+
     adj = Adjustment(
         spread_line_item_id=data.spread_line_item_id,
         delta=data.delta,
