@@ -51,7 +51,7 @@ async def test_protected_route_with_token(client, analyst_user):
     assert resp.status_code == 200
 
 
-async def test_analyst_cannot_see_other_users_spreads(client, analyst_user, sr_analyst_user):
+async def test_jwt_role_claims_are_correct(client, analyst_user, sr_analyst_user):
     sr_login = await client.post("/auth/login", json={"email": "sr@bank.com", "password": "password123"})
     assert sr_login.json()["role"] == "sr_credit_analyst"
     analyst_login = await client.post("/auth/login", json={"email": "analyst@bank.com", "password": "password123"})
