@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 30
+    anthropic_api_key: str = ""
+    ai_confidence_threshold: float = 0.85
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
