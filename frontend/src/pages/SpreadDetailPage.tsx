@@ -4,7 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSpreads } from '../api/spreads'
 import { getPeriods, createPeriod } from '../api/spreading'
 import SpreadingGrid from '../components/SpreadingGrid'
-import type { SpreadPeriod } from '../types'
+import IngestionHub from '../components/IngestionHub'
+import ExtractionReview from '../components/ExtractionReview'
+import type { SpreadPeriod, ExtractionJob } from '../types'
 
 type Statement = 'IS' | 'BS' | 'CF'
 
@@ -24,6 +26,8 @@ export default function SpreadDetailPage() {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
   const [newYear, setNewYear] = useState('')
   const [newType, setNewType] = useState<'actual' | 'projected'>('actual')
+  const [showIngestion, setShowIngestion] = useState(false)
+  const [pendingJob, setPendingJob] = useState<ExtractionJob | null>(null)
 
   const { data: spreads = [] } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
   const spread = spreads.find((s) => s.id === spreadId)
@@ -94,6 +98,12 @@ export default function SpreadDetailPage() {
           >
             + Add Period
           </button>
+          <button
+            onClick={() => setShowIngestion(true)}
+            className="px-3 py-1 rounded text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 shrink-0"
+          >
+            📎 Import Document
+          </button>
         </div>
 
         {/* Add Period form */}
@@ -159,6 +169,23 @@ export default function SpreadDetailPage() {
           )}
         </div>
       </div>
+
+      {showIngestion && (
+        <IngestionHub
+          spreadId={spreadId}
+          onJobReady={(job) => { setShowIngestion(false); setPendingJob(job) }}
+          onClose={() => setShowIngestion(false)}
+        />
+      )}
+      {pendingJob && (
+        <ExtractionReview
+          job={pendingJob}
+          periods={periods}
+          spreadId={spreadId}
+          onConfirmed={() => { setPendingJob(null); qc.invalidateQueries({ queryKey: ['line-items'] }) }}
+          onClose={() => setPendingJob(null)}
+        />
+      )}
     </div>
   )
 }
