@@ -56,7 +56,7 @@ export default function IngestionHub({ spreadId, onJobReady, onClose }: Props) {
           </div>
         )}
         {mutation.isError && (
-          <p className="mt-3 text-sm text-red-500 text-center">Upload failed. Please try again.</p>
+          <p className="mt-3 text-sm text-[var(--breach)] text-center">Upload failed. Please try again.</p>
         )}
 
         <div className="flex justify-end mt-6">

@@ -178,7 +178,7 @@ export default function ExtractionReview({ job, periods, onConfirmed, onClose }:
         </div>
 
         {mutation.isError && (
-          <p className="px-6 pb-4 text-red-500 text-sm">Import failed. Please try again.</p>
+          <p className="px-6 pb-4 text-[var(--breach)] text-sm">Import failed. Please try again.</p>
         )}
       </div>
     </div>

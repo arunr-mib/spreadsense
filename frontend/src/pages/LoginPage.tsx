@@ -56,7 +56,7 @@ export default function LoginPage() {
               className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-[var(--breach)] text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}

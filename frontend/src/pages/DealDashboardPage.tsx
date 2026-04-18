@@ -19,7 +19,7 @@ export default function DealDashboardPage() {
     <div className="min-h-screen bg-[var(--bg-page)]">
       <header className="bg-[var(--bg-strip)] px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white">Deal Dashboard</h1>
+          <h1 className="text-lg font-semibold text-[var(--bg-page)]">Deal Dashboard</h1>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5">SpreadSense</p>
         </div>
         <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export default function DealDashboardPage() {
         </div>
 
         {isError && (
-          <p className="text-red-500 text-sm">Failed to load spreads. Please refresh the page.</p>
+          <p className="text-[var(--breach)] text-sm">Failed to load spreads. Please refresh the page.</p>
         )}
         {isLoading ? (
           <p className="text-[var(--text-secondary)] text-sm">Loading...</p>

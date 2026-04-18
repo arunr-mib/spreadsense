@@ -38,7 +38,7 @@ export default function NewSpreadModal({ onClose }: Props) {
               {borrowers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
             {borrowersError && (
-              <p className="text-red-500 text-xs mt-1">Failed to load borrowers.</p>
+              <p className="text-[var(--breach)] text-xs mt-1">Failed to load borrowers.</p>
             )}
           </div>
           <div>
@@ -50,7 +50,7 @@ export default function NewSpreadModal({ onClose }: Props) {
         </div>
         <div className="flex justify-end gap-3 mt-6">
           {mutation.isError && (
-            <p className="text-red-500 text-xs">Failed to create spread. Please try again.</p>
+            <p className="text-[var(--breach)] text-xs">Failed to create spread. Please try again.</p>
           )}
           <button onClick={onClose} className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Cancel</button>
           <button

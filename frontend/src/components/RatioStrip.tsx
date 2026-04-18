@@ -31,9 +31,10 @@ export default function RatioStrip({ spreadId, activeSection, onSectionChange }:
     staleTime: 30_000,
   })
 
-  // Latest actual period
+  // Latest actual period — sort by fiscal_year ascending so .at(-1) is the most recent
   const latestPeriod = data?.periods
     .filter(p => p.period_type === 'actual')
+    .sort((a, b) => a.fiscal_year - b.fiscal_year)
     .at(-1) ?? null
 
   const ratioColor = (key: string, val: number | null, period: PeriodAnalytics | null) => {
