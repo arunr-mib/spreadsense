@@ -4,8 +4,8 @@ import type { PeriodAnalytics } from '../types'
 
 interface Props {
   spreadId: number
-  activeSection: 'spread' | 'kpis' | 'narrative'
-  onSectionChange: (section: 'spread' | 'kpis' | 'narrative') => void
+  activeSection: 'spread' | 'kpis' | 'narrative' | 'memo'
+  onSectionChange: (section: 'spread' | 'kpis' | 'narrative' | 'memo') => void
 }
 
 const RATIO_LABELS: { key: keyof PeriodAnalytics['ratios']; label: string; shortLabel: string }[] = [
@@ -47,10 +47,11 @@ export default function RatioStrip({ spreadId, activeSection, onSectionChange }:
     return 'text-[#e2e8f0]'
   }
 
-  const navItems: { key: 'spread' | 'kpis' | 'narrative'; label: string }[] = [
+  const navItems: { key: 'spread' | 'kpis' | 'narrative' | 'memo'; label: string }[] = [
     { key: 'spread', label: 'Spread' },
     { key: 'kpis', label: 'KPIs' },
     { key: 'narrative', label: 'Narrative' },
+    { key: 'memo', label: 'Memo' },
   ]
 
   return (

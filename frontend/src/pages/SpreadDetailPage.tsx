@@ -9,10 +9,11 @@ import ExtractionReview from '../components/ExtractionReview'
 import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
 import NarrativeSection from '../components/NarrativeSection'
+import MemoSection from '../components/MemoSection'
 import type { SpreadPeriod, ExtractionJob } from '../types'
 
 type Statement = 'IS' | 'BS' | 'CF'
-type Section = 'spread' | 'kpis' | 'narrative'
+type Section = 'spread' | 'kpis' | 'narrative' | 'memo'
 
 const STATEMENT_LABELS: Record<Statement, string> = {
   IS: 'Income Statement',
@@ -193,6 +194,9 @@ export default function SpreadDetailPage() {
 
         {/* ── NARRATIVE SECTION ── */}
         {activeSection === 'narrative' && <NarrativeSection spreadId={spreadId} />}
+
+        {/* ── MEMO SECTION ── */}
+        {activeSection === 'memo' && <MemoSection spreadId={spreadId} />}
       </div>
 
       {showIngestion && (
