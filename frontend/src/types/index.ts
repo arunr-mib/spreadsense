@@ -67,3 +67,38 @@ export interface ExtractionJob {
   results: Record<string, Record<string, { value: number | null; confidence_score: number }>> | null
   created_at: string
 }
+
+export interface RatioSet {
+  dscr: number | null
+  leverage: number | null
+  current_ratio: number | null
+  interest_coverage: number | null
+  ebitda_margin: number | null
+  gross_margin: number | null
+  net_profit_margin: number | null
+  return_on_assets: number | null
+}
+
+export interface PeriodAnalytics {
+  period_id: number
+  fiscal_year: number
+  period_type: 'actual' | 'projected'
+  ratios: RatioSet
+  breaches: string[]
+  near_threshold: string[]
+}
+
+export interface SpreadAnalytics {
+  spread_id: number
+  periods: PeriodAnalytics[]
+}
+
+export interface NarrativeVersion {
+  id: number
+  spread_id: number
+  version: number
+  content: string
+  created_by: number
+  created_by_name: string
+  created_at: string
+}

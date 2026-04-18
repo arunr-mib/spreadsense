@@ -6,9 +6,13 @@ import { getPeriods, createPeriod } from '../api/spreading'
 import SpreadingGrid from '../components/SpreadingGrid'
 import IngestionHub from '../components/IngestionHub'
 import ExtractionReview from '../components/ExtractionReview'
+import RatioStrip from '../components/RatioStrip'
+import KpiSection from '../components/KpiSection'
+import NarrativeSection from '../components/NarrativeSection'
 import type { SpreadPeriod, ExtractionJob } from '../types'
 
 type Statement = 'IS' | 'BS' | 'CF'
+type Section = 'spread' | 'kpis' | 'narrative'
 
 const STATEMENT_LABELS: Record<Statement, string> = {
   IS: 'Income Statement',
@@ -21,6 +25,8 @@ export default function SpreadDetailPage() {
   const spreadId = Number(id)
   const navigate = useNavigate()
   const qc = useQueryClient()
+
+  const [activeSection, setActiveSection] = useState<Section>('spread')
   const [activeTab, setActiveTab] = useState<Statement>('IS')
   const [activePeriodId, setActivePeriodId] = useState<number | null>(null)
   const [showAddPeriod, setShowAddPeriod] = useState(false)
@@ -49,6 +55,7 @@ export default function SpreadDetailPage() {
     mutationFn: () => createPeriod(spreadId, { fiscal_year: Number(newYear), period_type: newType }),
     onSuccess: (newPeriod: SpreadPeriod) => {
       qc.invalidateQueries({ queryKey: ['periods', spreadId] })
+      qc.invalidateQueries({ queryKey: ['analytics', spreadId] })
       setActivePeriodId(newPeriod.id)
       setShowAddPeriod(false)
       setNewYear('')
@@ -68,106 +75,124 @@ export default function SpreadDetailPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Period selector */}
-        <div className="flex items-center gap-3 mb-6 overflow-x-auto">
-          <span className="text-sm text-[var(--text-secondary)] shrink-0">Period:</span>
-          {periodsLoading ? (
-            <span className="text-[var(--text-secondary)] text-sm">Loading...</span>
-          ) : (
-            periods.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setActivePeriodId(p.id)}
-                className={`px-3 py-1 rounded text-sm shrink-0 ${
-                  activePeriodId === p.id
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-page)]'
-                }`}
-              >
-                FY {p.fiscal_year}
-                <span className="ml-1 text-xs opacity-70">
-                  {p.period_type === 'projected' ? '(P)' : ''}
-                </span>
-              </button>
-            ))
-          )}
-          <button
-            onClick={() => setShowAddPeriod(!showAddPeriod)}
-            className="px-3 py-1 rounded text-sm border border-dashed text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] shrink-0"
-          >
-            + Add Period
-          </button>
-          <button
-            onClick={() => setShowIngestion(true)}
-            className="px-3 py-1 rounded text-sm bg-[var(--bg-page)] text-[var(--accent)] border border-[var(--border)] hover:bg-[var(--bg-card)] shrink-0"
-          >
-            📎 Import Document
-          </button>
-        </div>
+      {/* Persistent ratio strip + sub-nav */}
+      <RatioStrip
+        spreadId={spreadId}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
 
-        {/* Add Period form */}
-        {showAddPeriod && (
-          <div className="mb-4 flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 w-fit">
-            <input
-              type="number"
-              placeholder="Fiscal Year (e.g. 2023)"
-              value={newYear}
-              onChange={(e) => setNewYear(e.target.value)}
-              className="border rounded px-3 py-1 text-sm w-48"
-            />
-            <select
-              value={newType}
-              onChange={(e) => setNewType(e.target.value as 'actual' | 'projected')}
-              className="border rounded px-3 py-1 text-sm"
-            >
-              <option value="actual">Actual</option>
-              <option value="projected">Projected</option>
-            </select>
-            <button
-              disabled={!newYear || addPeriodMutation.isPending}
-              onClick={() => addPeriodMutation.mutate()}
-              className="px-3 py-1 bg-[var(--accent)] text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
-            >
-              Add
-            </button>
-            {addPeriodMutation.isError && (
-              <span className="text-red-500 text-xs">Failed (duplicate year?)</span>
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* ── SPREAD SECTION ── */}
+        {activeSection === 'spread' && (
+          <>
+            {/* Period selector */}
+            <div className="flex items-center gap-3 mb-6 overflow-x-auto">
+              <span className="text-sm text-[var(--text-secondary)] shrink-0">Period:</span>
+              {periodsLoading ? (
+                <span className="text-[var(--text-secondary)] text-sm">Loading...</span>
+              ) : (
+                periods.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setActivePeriodId(p.id)}
+                    className={`px-3 py-1 rounded text-sm shrink-0 ${
+                      activePeriodId === p.id
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-page)]'
+                    }`}
+                  >
+                    FY {p.fiscal_year}
+                    <span className="ml-1 text-xs opacity-70">
+                      {p.period_type === 'projected' ? '(P)' : ''}
+                    </span>
+                  </button>
+                ))
+              )}
+              <button
+                onClick={() => setShowAddPeriod(!showAddPeriod)}
+                className="px-3 py-1 rounded text-sm border border-dashed border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] shrink-0"
+              >
+                + Add Period
+              </button>
+              <button
+                onClick={() => setShowIngestion(true)}
+                className="px-3 py-1 rounded text-sm bg-[var(--bg-page)] text-[var(--accent)] border border-[var(--border)] hover:bg-[var(--bg-card)] shrink-0"
+              >
+                📎 Import Document
+              </button>
+            </div>
+
+            {/* Add Period form */}
+            {showAddPeriod && (
+              <div className="mb-4 flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 w-fit">
+                <input
+                  type="number"
+                  placeholder="Fiscal Year (e.g. 2023)"
+                  value={newYear}
+                  onChange={(e) => setNewYear(e.target.value)}
+                  className="border border-[var(--border)] rounded px-3 py-1 text-sm w-48 bg-[var(--bg-page)] text-[var(--text-primary)]"
+                />
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value as 'actual' | 'projected')}
+                  className="border border-[var(--border)] rounded px-3 py-1 text-sm bg-[var(--bg-page)] text-[var(--text-primary)]"
+                >
+                  <option value="actual">Actual</option>
+                  <option value="projected">Projected</option>
+                </select>
+                <button
+                  disabled={!newYear || addPeriodMutation.isPending}
+                  onClick={() => addPeriodMutation.mutate()}
+                  className="px-3 py-1 bg-[var(--accent)] text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
+                >
+                  Add
+                </button>
+                {addPeriodMutation.isError && (
+                  <span className="text-[var(--breach)] text-xs">Failed (duplicate year?)</span>
+                )}
+              </div>
             )}
-          </div>
+
+            {/* Statement tabs */}
+            <div className="flex gap-1 mb-4">
+              {(Object.keys(STATEMENT_LABELS) as Statement[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm rounded-t-lg font-medium ${
+                    activeTab === tab
+                      ? 'bg-[var(--bg-card)] border border-b-[var(--bg-card)] text-[var(--accent)]'
+                      : 'bg-[var(--bg-page)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'
+                  }`}
+                >
+                  {STATEMENT_LABELS[tab]}
+                </button>
+              ))}
+            </div>
+
+            {/* Grid */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-b-lg rounded-tr-lg overflow-hidden">
+              {activePeriodId ? (
+                <SpreadingGrid
+                  spreadId={spreadId}
+                  periodId={activePeriodId}
+                  statement={activeTab}
+                />
+              ) : (
+                <div className="text-center py-12 text-[var(--text-secondary)]">
+                  <p>Add a fiscal year period above to start entering data.</p>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
-        {/* Statement tabs */}
-        <div className="flex gap-1 mb-4">
-          {(Object.keys(STATEMENT_LABELS) as Statement[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm rounded-t-lg font-medium ${
-                activeTab === tab
-                  ? 'bg-[var(--bg-card)] border border-b-[var(--bg-card)] text-[var(--accent)]'
-                  : 'bg-[var(--bg-page)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'
-              }`}
-            >
-              {STATEMENT_LABELS[tab]}
-            </button>
-          ))}
-        </div>
+        {/* ── KPI SECTION ── */}
+        {activeSection === 'kpis' && <KpiSection spreadId={spreadId} />}
 
-        {/* Grid */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-b-lg rounded-tr-lg overflow-hidden">
-          {activePeriodId ? (
-            <SpreadingGrid
-              spreadId={spreadId}
-              periodId={activePeriodId}
-              statement={activeTab}
-            />
-          ) : (
-            <div className="text-center py-12 text-[var(--text-secondary)]">
-              <p>Add a fiscal year period above to start entering data.</p>
-            </div>
-          )}
-        </div>
+        {/* ── NARRATIVE SECTION ── */}
+        {activeSection === 'narrative' && <NarrativeSection spreadId={spreadId} />}
       </div>
 
       {showIngestion && (
@@ -182,7 +207,11 @@ export default function SpreadDetailPage() {
           job={pendingJob}
           periods={periods}
           spreadId={spreadId}
-          onConfirmed={() => { setPendingJob(null); qc.invalidateQueries({ queryKey: ['line-items'] }) }}
+          onConfirmed={() => {
+            setPendingJob(null)
+            qc.invalidateQueries({ queryKey: ['line-items'] })
+            qc.invalidateQueries({ queryKey: ['analytics', spreadId] })
+          }}
           onClose={() => setPendingJob(null)}
         />
       )}
