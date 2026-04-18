@@ -153,7 +153,6 @@ async def test_analytics_near_threshold_flagged(client, ana_headers, analytics_s
 
 async def test_analytics_cross_user_access_denied(client, db, analytics_spread):
     """Analyst cannot access another analyst's spread analytics — returns 404."""
-    from app.core.security import hash_password
     other = User(email="other@bank.com", full_name="Other Analyst",
                  hashed_password=hash_password("pass456"), role=UserRole.analyst)
     db.add(other)

@@ -15,8 +15,10 @@ from app.modules.ingestion.rma_template import (
 from app.modules.analytics.schemas import SpreadAnalyticsRead, PeriodAnalytics, RatioSet
 
 
-def _get(d: dict, key: str):
-    return d.get(key)
+def _get(d: dict, key: str) -> float | None:
+    """Safe getter — returns float or None. Coerces to float to match rma_template contract."""
+    v = d.get(key)
+    return float(v) if v is not None else None
 
 # Default thresholds — all 4 threshold ratios
 _DEFAULTS = {
@@ -105,7 +107,8 @@ def _compute_ratios(
 
 
 async def get_analytics(spread_id: int, user: User, db: AsyncSession) -> SpreadAnalyticsRead:
-    # Verify spread exists and enforce ownership — analysts see only their own spreads.
+    # Verify spread exists and enforce ownership.
+    # Analysts see only their own spreads; sr_credit_analyst and admin see all.
     # Return 404 (not 403) to avoid revealing the existence of other users' spreads.
     query = select(Spread).where(Spread.id == spread_id)
     if user.role == UserRole.analyst:
