@@ -6,6 +6,7 @@ from app.modules.spreading.router import router as spreading_router
 from app.modules.ingestion.router import router as ingestion_router
 from app.modules.analytics.router import router as analytics_router
 from app.modules.narrative.router import router as narrative_router
+from app.modules.memo.router import router as memo_router
 
 app = FastAPI(title="SpreadSense", version="0.1.0")
 app.include_router(auth_router)
@@ -15,6 +16,7 @@ app.include_router(spreading_router)
 app.include_router(ingestion_router)
 app.include_router(analytics_router)
 app.include_router(narrative_router)
+app.include_router(memo_router)
 
 
 @app.get("/health")
