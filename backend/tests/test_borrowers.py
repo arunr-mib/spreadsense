@@ -63,3 +63,10 @@ async def test_unauthenticated_borrower_access(client):
 async def test_get_nonexistent_borrower(client, auth_headers):
     resp = await client.get("/borrowers/99999", headers=auth_headers)
     assert resp.status_code == 404
+
+
+async def test_create_borrower_invalid_fiscal_month(client, auth_headers):
+    resp = await client.post("/borrowers/", json={
+        "name": "Bad Corp", "fiscal_year_end_month": 13
+    }, headers=auth_headers)
+    assert resp.status_code == 422
