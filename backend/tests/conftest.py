@@ -23,6 +23,8 @@ def event_loop():
 async def engine():
     _engine = create_async_engine(TEST_DB_URL, echo=False)
     async with _engine.begin() as conn:
+        # Drop all first to ensure a clean slate (handles interrupted prior runs)
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield _engine
     async with _engine.begin() as conn:
