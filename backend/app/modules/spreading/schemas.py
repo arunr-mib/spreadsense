@@ -49,3 +49,19 @@ class BalanceSheetValidationResponse(BaseModel):
     spread_id: int
     all_balanced: bool
     periods: list[BalanceSheetValidationPeriod]
+
+
+class AdjustmentCreate(BaseModel):
+    spread_line_item_id: int
+    delta: float
+    reason: str = Field(min_length=1)  # non-empty required
+
+
+class AdjustmentRead(BaseModel):
+    id: int
+    spread_line_item_id: int
+    delta: float
+    reason: str
+    created_by: int
+    created_at: datetime
+    model_config = {"from_attributes": True}

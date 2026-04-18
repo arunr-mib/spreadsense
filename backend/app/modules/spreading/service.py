@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 
 from app.models.spread_period import SpreadPeriod, PeriodType
 from app.models.spread_line_item import SpreadLineItem
+from app.models.adjustment import Adjustment
 from app.models.user import User
 from app.modules.ingestion.rma_template import (
     IS_FIELDS, BS_FIELDS, CF_FIELDS,
@@ -14,6 +15,7 @@ from app.modules.ingestion.rma_template import (
 from app.modules.spreading.schemas import (
     SpreadPeriodCreate, LineItemUpdate, SpreadLineItemRead,
     BalanceSheetValidationPeriod, BalanceSheetValidationResponse,
+    AdjustmentCreate,
 )
 
 STATEMENT_FIELDS = {"IS": IS_FIELDS, "BS": BS_FIELDS, "CF": CF_FIELDS}
@@ -189,3 +191,27 @@ def _field_statement(key: str) -> Optional[str]:
         if any(f["key"] == key for f in fields):
             return stmt
     return None
+
+
+async def create_adjustment(period_id: int, data: AdjustmentCreate,
+                             user: User, db: AsyncSession) -> Adjustment:
+    adj = Adjustment(
+        spread_line_item_id=data.spread_line_item_id,
+        delta=data.delta,
+        reason=data.reason,
+        created_by=user.id,
+    )
+    db.add(adj)
+    await db.flush()
+    await db.refresh(adj)
+    return adj
+
+
+async def list_adjustments(period_id: int, db: AsyncSession) -> list[Adjustment]:
+    result = await db.execute(
+        select(Adjustment)
+        .join(SpreadLineItem, Adjustment.spread_line_item_id == SpreadLineItem.id)
+        .where(SpreadLineItem.spread_period_id == period_id)
+        .order_by(Adjustment.created_at)
+    )
+    return list(result.scalars().all())

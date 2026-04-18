@@ -11,6 +11,7 @@ from app.modules.spreading.schemas import (
     SpreadPeriodCreate, SpreadPeriodRead,
     SpreadLineItemRead, LineItemUpdate,
     BalanceSheetValidationResponse,
+    AdjustmentCreate, AdjustmentRead,
 )
 
 router = APIRouter(tags=["spreading"])
@@ -55,3 +56,19 @@ async def validate_bs(spread_id: int,
                       db: AsyncSession = Depends(get_db),
                       _: User = Depends(get_current_user)):
     return await service.validate_spread_bs(spread_id, db)
+
+
+@router.post("/spreads/{spread_id}/periods/{period_id}/adjustments",
+             response_model=AdjustmentRead, status_code=201)
+async def create_adjustment(spread_id: int, period_id: int, body: AdjustmentCreate,
+                            db: AsyncSession = Depends(get_db),
+                            user: User = Depends(get_current_user)):
+    return await service.create_adjustment(period_id, body, user, db)
+
+
+@router.get("/spreads/{spread_id}/periods/{period_id}/adjustments",
+            response_model=list[AdjustmentRead])
+async def list_adjustments(spread_id: int, period_id: int,
+                           db: AsyncSession = Depends(get_db),
+                           _: User = Depends(get_current_user)):
+    return await service.list_adjustments(period_id, db)

@@ -146,3 +146,48 @@ async def test_balance_sheet_validation(client, sp_headers, spread_id):
     resp = await client.get(f"/spreads/{spread_id}/validate", headers=sp_headers)
     assert resp.status_code == 200
     assert "balanced" in resp.json() or "periods" in resp.json()
+
+
+async def test_create_adjustment(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2024, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    # First create a line item to adjust
+    await client.put(f"/spreads/{spread_id}/periods/{pid}/line-items/net_sales",
+        json={"value": 1_000_000.0, "updated_at": None}, headers=sp_headers)
+    # Find the line item id via GET
+    items = await client.get(
+        f"/spreads/{spread_id}/periods/{pid}/line-items?statement=IS", headers=sp_headers)
+    net_sales_id = next(i["id"] for i in items.json()
+                        if i["rma_field_key"] == "net_sales" and i["id"])
+
+    resp = await client.post(
+        f"/spreads/{spread_id}/periods/{pid}/adjustments",
+        json={"spread_line_item_id": net_sales_id, "delta": 50_000.0,
+              "reason": "Add intercompany revenue"},
+        headers=sp_headers,
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["delta"] == 50_000.0
+    assert data["reason"] == "Add intercompany revenue"
+
+async def test_adjustment_requires_reason(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2025, "period_type": "actual"}, headers=sp_headers)
+    pid = period.json()["id"]
+    resp = await client.post(
+        f"/spreads/{spread_id}/periods/{pid}/adjustments",
+        json={"spread_line_item_id": 1, "delta": 10.0, "reason": ""},
+        headers=sp_headers,
+    )
+    assert resp.status_code == 422  # empty reason rejected
+
+async def test_list_adjustments(client, sp_headers, spread_id):
+    period = await client.post(f"/spreads/{spread_id}/periods",
+        json={"fiscal_year": 2026, "period_type": "projected"}, headers=sp_headers)
+    pid = period.json()["id"]
+    resp = await client.get(
+        f"/spreads/{spread_id}/periods/{pid}/adjustments", headers=sp_headers)
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
