@@ -61,7 +61,7 @@ export default function DealDashboardPage() {
               </thead>
               <tbody className="divide-y">
                 {spreads.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50 cursor-pointer">
+                  <tr key={s.id} onClick={() => navigate(`/spreads/${s.id}`)} className="border-b hover:bg-gray-50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-gray-900">{s.deal_name}</td>
                     <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                     <td className="px-4 py-3 text-gray-500">{new Date(s.updated_at).toLocaleDateString()}</td>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DealDashboardPage from './pages/DealDashboardPage'
+import SpreadDetailPage from './pages/SpreadDetailPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DealDashboardPage />} />
+          <Route path="/spreads/:id" element={<SpreadDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
