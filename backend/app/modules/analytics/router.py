@@ -14,6 +14,6 @@ router = APIRouter(tags=["analytics"])
 async def get_analytics(
     spread_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
-    return await service.get_analytics(spread_id, db)
+    return await service.get_analytics(spread_id, user, db)

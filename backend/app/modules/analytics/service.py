@@ -8,10 +8,15 @@ from app.models.spread import Spread
 from app.models.spread_period import SpreadPeriod
 from app.models.spread_line_item import SpreadLineItem
 from app.models.loan_type import LoanType
+from app.models.user import User, UserRole
 from app.modules.ingestion.rma_template import (
-    compute_period_values, compute_cross_statement, _get,
+    compute_period_values, compute_cross_statement,
 )
 from app.modules.analytics.schemas import SpreadAnalyticsRead, PeriodAnalytics, RatioSet
+
+
+def _get(d: dict, key: str):
+    return d.get(key)
 
 # Default thresholds — all 4 threshold ratios
 _DEFAULTS = {
@@ -39,7 +44,8 @@ def _compute_ratios(
     # Merged lookup — raw values take priority; computed fill gaps
     vals = {**is_raw, **is_comp, **bs_raw, **bs_comp, **cf_raw, **cross}
 
-    # Leverage numerator: sum long_term_debt + current_portion_ltd
+    # Leverage = (long_term_debt + current_portion_ltd) / EBITDA
+    # Both debt components from BS. If one is absent, treat as 0 (partial data).
     ltd = _get(vals, "long_term_debt")
     cpltd = _get(vals, "current_portion_ltd")
     ebitda = _get(vals, "ebitda")
@@ -98,9 +104,13 @@ def _compute_ratios(
     return ratios, breaches, near
 
 
-async def get_analytics(spread_id: int, db: AsyncSession) -> SpreadAnalyticsRead:
-    # Verify spread exists
-    spread_result = await db.execute(select(Spread).where(Spread.id == spread_id))
+async def get_analytics(spread_id: int, user: User, db: AsyncSession) -> SpreadAnalyticsRead:
+    # Verify spread exists and enforce ownership — analysts see only their own spreads.
+    # Return 404 (not 403) to avoid revealing the existence of other users' spreads.
+    query = select(Spread).where(Spread.id == spread_id)
+    if user.role == UserRole.analyst:
+        query = query.where(Spread.created_by == user.id)
+    spread_result = await db.execute(query)
     spread = spread_result.scalar_one_or_none()
     if not spread:
         raise HTTPException(status_code=404, detail="Spread not found")

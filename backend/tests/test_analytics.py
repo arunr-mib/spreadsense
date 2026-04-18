@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import AsyncMock
 from app.models.user import User, UserRole
 from app.models.borrower import Borrower
 from app.models.spread import Spread, SpreadStatus
@@ -150,3 +149,20 @@ async def test_analytics_near_threshold_flagged(client, ana_headers, analytics_s
     assert "near_threshold" in period
     # leverage=2.0, max=4.50, amber zone 4.05–4.50 → not near
     assert "leverage" not in period["near_threshold"]
+
+
+async def test_analytics_cross_user_access_denied(client, db, analytics_spread):
+    """Analyst cannot access another analyst's spread analytics — returns 404."""
+    from app.core.security import hash_password
+    other = User(email="other@bank.com", full_name="Other Analyst",
+                 hashed_password=hash_password("pass456"), role=UserRole.analyst)
+    db.add(other)
+    await db.flush()
+
+    resp = await client.post("/auth/login",
+        json={"email": "other@bank.com", "password": "pass456"})
+    other_headers = {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+    resp = await client.get(f"/spreads/{analytics_spread.id}/analytics",
+                            headers=other_headers)
+    assert resp.status_code == 404
