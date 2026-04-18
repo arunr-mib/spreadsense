@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fst_user
+      POSTGRES_PASSWORD: fst_pass
+      POSTGRES_DB: fst_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fst_user -d fst_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fst_user:fst_pass@postgres:5432/fst_db
+      JWT_SECRET: change-me-in-production
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: 30
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+    environment:
+      VITE_API_URL: http://localhost:8001
+
+volumes:
+  postgres_data:
