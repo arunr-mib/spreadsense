@@ -9,7 +9,8 @@ from app.modules.ingestion.schemas import ExtractionJobRead, ConfirmExtractionRe
 
 router = APIRouter(prefix="/ingestion", tags=["ingestion"])
 
-ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "xls", "xlsx"}
+# "doc" (Word 97) and "xls" (BIFF) omitted — python-docx/openpyxl cannot parse legacy binary formats
+ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx"}
 MAX_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
