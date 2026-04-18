@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { getSpreads } from '../api/spreads'
 import { useAuthStore } from '../store/auth'
 import StatusBadge from '../components/StatusBadge'
@@ -9,7 +10,10 @@ export default function DealDashboardPage() {
   const [showModal, setShowModal] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const { data: spreads = [], isLoading } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
+  const navigate = useNavigate()
+  const { data: spreads = [], isLoading, isError } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
+
+  const handleLogout = () => { logout(); navigate('/login', { replace: true }) }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,14 +24,14 @@ export default function DealDashboardPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">{user?.full_name}</span>
-          <button onClick={logout} className="text-sm text-gray-400 hover:text-gray-700">Sign out</button>
+          <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-gray-700">Sign out</button>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
-            Spreads <span className="text-gray-400 font-normal text-base">({spreads.length})</span>
+            Spreads {!isLoading && <span className="text-gray-400 font-normal text-base">({spreads.length})</span>}
           </h2>
           <button onClick={() => setShowModal(true)}
             className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 font-medium">
@@ -35,6 +39,9 @@ export default function DealDashboardPage() {
           </button>
         </div>
 
+        {isError && (
+          <p className="text-red-500 text-sm">Failed to load spreads. Please refresh the page.</p>
+        )}
         {isLoading ? (
           <p className="text-gray-400 text-sm">Loading...</p>
         ) : spreads.length === 0 ? (

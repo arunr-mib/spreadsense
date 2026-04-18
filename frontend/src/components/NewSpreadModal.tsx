@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getBorrowers } from '../api/borrowers'
 import { createSpread } from '../api/spreads'
@@ -10,7 +10,13 @@ export default function NewSpreadModal({ onClose }: Props) {
   const [dealName, setDealName] = useState('')
   const qc = useQueryClient()
 
-  const { data: borrowers = [] } = useQuery({ queryKey: ['borrowers'], queryFn: getBorrowers })
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  const { data: borrowers = [], isError: borrowersError } = useQuery({ queryKey: ['borrowers'], queryFn: getBorrowers })
   const mutation = useMutation({
     mutationFn: createSpread,
     onSuccess: () => {
@@ -20,8 +26,8 @@ export default function NewSpreadModal({ onClose }: Props) {
   })
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">New Spread</h2>
         <div className="space-y-4">
           <div>
@@ -31,6 +37,9 @@ export default function NewSpreadModal({ onClose }: Props) {
               <option value="">Select borrower...</option>
               {borrowers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
+            {borrowersError && (
+              <p className="text-red-500 text-xs mt-1">Failed to load borrowers.</p>
+            )}
           </div>
           <div>
             <label htmlFor="deal-name" className="block text-sm font-medium text-gray-700 mb-1">Deal Name</label>
@@ -40,6 +49,9 @@ export default function NewSpreadModal({ onClose }: Props) {
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">
+          {mutation.isError && (
+            <p className="text-red-500 text-xs">Failed to create spread. Please try again.</p>
+          )}
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
           <button
             disabled={!borrowerId || !dealName || mutation.isPending}
