@@ -5,68 +5,76 @@ COMPUTED_FIELDS: set of field keys whose values are derived — never manually e
 """
 from typing import Optional
 
+# Sign convention for cash flow fields:
+# All values are stored as POSITIVE numbers representing absolute amounts.
+# Directionality (inflow vs outflow) is handled by the compute functions.
+# Specifically:
+#   - capital_expenditures: positive = cash spent on capex (outflow)
+#   - debt_repayment_principal: positive = cash paid to reduce debt (outflow)
+# compute_period_values() negates these automatically where needed.
+
 # ── Income Statement ────────────────────────────────────────────────────────
 IS_FIELDS = [
-    {"key": "net_sales",                   "label": "Net Sales",                      "computed": False},
-    {"key": "cost_of_goods_sold",          "label": "Cost of Goods Sold",             "computed": False},
-    {"key": "gross_profit",                "label": "Gross Profit",                   "computed": True},
-    {"key": "sg_and_a",                    "label": "SG&A Expenses",                  "computed": False},
-    {"key": "other_operating_expenses",    "label": "Other Operating Expenses",       "computed": False},
-    {"key": "ebitda",                      "label": "EBITDA",                         "computed": True},
-    {"key": "depreciation_and_amortization", "label": "Depreciation & Amortization", "computed": False},
-    {"key": "ebit",                        "label": "EBIT",                           "computed": True},
-    {"key": "interest_expense",            "label": "Interest Expense",               "computed": False},
-    {"key": "pre_tax_income",              "label": "Pre-Tax Income",                 "computed": True},
-    {"key": "income_tax",                  "label": "Income Tax Expense",             "computed": False},
-    {"key": "net_income",                  "label": "Net Income",                     "computed": True},
+    {"key": "net_sales",                   "label": "Net Sales",                      "computed": False, "statement": "IS"},
+    {"key": "cost_of_goods_sold",          "label": "Cost of Goods Sold",             "computed": False, "statement": "IS"},
+    {"key": "gross_profit",                "label": "Gross Profit",                   "computed": True,  "statement": "IS"},
+    {"key": "sg_and_a",                    "label": "SG&A Expenses",                  "computed": False, "statement": "IS"},
+    {"key": "other_operating_expenses",    "label": "Other Operating Expenses",       "computed": False, "statement": "IS"},
+    {"key": "ebitda",                      "label": "EBITDA",                         "computed": True,  "statement": "IS"},
+    {"key": "depreciation_and_amortization", "label": "Depreciation & Amortization", "computed": False, "statement": "IS"},
+    {"key": "ebit",                        "label": "EBIT",                           "computed": True,  "statement": "IS"},
+    {"key": "interest_expense",            "label": "Interest Expense",               "computed": False, "statement": "IS"},
+    {"key": "pre_tax_income",              "label": "Pre-Tax Income",                 "computed": True,  "statement": "IS"},
+    {"key": "income_tax",                  "label": "Income Tax Expense",             "computed": False, "statement": "IS"},
+    {"key": "net_income",                  "label": "Net Income",                     "computed": True,  "statement": "IS"},
 ]
 
 # ── Balance Sheet ────────────────────────────────────────────────────────────
 BS_FIELDS = [
     # Assets
-    {"key": "cash",                        "label": "Cash & Cash Equivalents",        "computed": False},
-    {"key": "accounts_receivable",         "label": "Accounts Receivable",            "computed": False},
-    {"key": "inventory",                   "label": "Inventory",                      "computed": False},
-    {"key": "other_current_assets",        "label": "Other Current Assets",           "computed": False},
-    {"key": "total_current_assets",        "label": "Total Current Assets",           "computed": True},
-    {"key": "fixed_assets_net",            "label": "Fixed Assets (Net)",             "computed": False},
-    {"key": "other_long_term_assets",      "label": "Other Long-Term Assets",         "computed": False},
-    {"key": "total_assets",                "label": "Total Assets",                   "computed": True},
+    {"key": "cash",                        "label": "Cash & Cash Equivalents",        "computed": False, "statement": "BS"},
+    {"key": "accounts_receivable",         "label": "Accounts Receivable",            "computed": False, "statement": "BS"},
+    {"key": "inventory",                   "label": "Inventory",                      "computed": False, "statement": "BS"},
+    {"key": "other_current_assets",        "label": "Other Current Assets",           "computed": False, "statement": "BS"},
+    {"key": "total_current_assets",        "label": "Total Current Assets",           "computed": True,  "statement": "BS"},
+    {"key": "fixed_assets_net",            "label": "Fixed Assets (Net)",             "computed": False, "statement": "BS"},
+    {"key": "other_long_term_assets",      "label": "Other Long-Term Assets",         "computed": False, "statement": "BS"},
+    {"key": "total_assets",                "label": "Total Assets",                   "computed": True,  "statement": "BS"},
     # Liabilities & Equity
-    {"key": "accounts_payable",            "label": "Accounts Payable",               "computed": False},
-    {"key": "accrued_liabilities",         "label": "Accrued Liabilities",            "computed": False},
-    {"key": "current_portion_ltd",         "label": "Current Portion of LTD",         "computed": False},
-    {"key": "other_current_liabilities",   "label": "Other Current Liabilities",      "computed": False},
-    {"key": "total_current_liabilities",   "label": "Total Current Liabilities",      "computed": True},
-    {"key": "long_term_debt",              "label": "Long-Term Debt",                 "computed": False},
-    {"key": "other_long_term_liabilities", "label": "Other Long-Term Liabilities",    "computed": False},
-    {"key": "total_liabilities",           "label": "Total Liabilities",              "computed": True},
-    {"key": "total_equity",                "label": "Total Equity",                   "computed": False},
-    {"key": "total_liabilities_and_equity","label": "Total Liabilities & Equity",     "computed": True},
+    {"key": "accounts_payable",            "label": "Accounts Payable",               "computed": False, "statement": "BS"},
+    {"key": "accrued_liabilities",         "label": "Accrued Liabilities",            "computed": False, "statement": "BS"},
+    {"key": "current_portion_ltd",         "label": "Current Portion of LTD",         "computed": False, "statement": "BS"},
+    {"key": "other_current_liabilities",   "label": "Other Current Liabilities",      "computed": False, "statement": "BS"},
+    {"key": "total_current_liabilities",   "label": "Total Current Liabilities",      "computed": True,  "statement": "BS"},
+    {"key": "long_term_debt",              "label": "Long-Term Debt",                 "computed": False, "statement": "BS"},
+    {"key": "other_long_term_liabilities", "label": "Other Long-Term Liabilities",    "computed": False, "statement": "BS"},
+    {"key": "total_liabilities",           "label": "Total Liabilities",              "computed": True,  "statement": "BS"},
+    {"key": "total_equity",                "label": "Total Equity",                   "computed": False, "statement": "BS"},
+    {"key": "total_liabilities_and_equity","label": "Total Liabilities & Equity",     "computed": True,  "statement": "BS"},
 ]
 
 # ── UCA Cash Flow ────────────────────────────────────────────────────────────
 CF_FIELDS = [
-    {"key": "cf_net_income",               "label": "Net Income",                     "computed": False},
-    {"key": "add_depreciation_amortization","label": "Add: Depreciation & Amortization","computed": False},
-    {"key": "add_other_non_cash",          "label": "Add: Other Non-Cash Items",      "computed": False},
-    {"key": "change_accounts_receivable",  "label": "Change in Accounts Receivable",  "computed": False},
-    {"key": "change_inventory",            "label": "Change in Inventory",            "computed": False},
-    {"key": "change_accounts_payable",     "label": "Change in Accounts Payable",     "computed": False},
-    {"key": "change_other_working_capital","label": "Change in Other Working Capital", "computed": False},
-    {"key": "net_cash_from_operations",    "label": "Net Cash from Operations",       "computed": True},
-    {"key": "capital_expenditures",        "label": "Capital Expenditures",           "computed": False},
-    {"key": "other_investing",             "label": "Other Investing Activities",      "computed": False},
-    {"key": "net_cash_from_investing",     "label": "Net Cash from Investing",        "computed": True},
-    {"key": "debt_proceeds",               "label": "Debt Proceeds",                  "computed": False},
-    {"key": "debt_repayment_principal",    "label": "Debt Repayment (Principal)",     "computed": False},
-    {"key": "dividends_distributions",     "label": "Dividends / Distributions",      "computed": False},
-    {"key": "other_financing",             "label": "Other Financing Activities",      "computed": False},
-    {"key": "net_cash_from_financing",     "label": "Net Cash from Financing",        "computed": True},
-    {"key": "net_change_in_cash",          "label": "Net Change in Cash",             "computed": True},
+    {"key": "cf_net_income",               "label": "Net Income",                     "computed": False, "statement": "CF"},
+    {"key": "add_depreciation_amortization","label": "Add: Depreciation & Amortization","computed": False, "statement": "CF"},
+    {"key": "add_other_non_cash",          "label": "Add: Other Non-Cash Items",      "computed": False, "statement": "CF"},
+    {"key": "change_accounts_receivable",  "label": "Change in Accounts Receivable",  "computed": False, "statement": "CF"},
+    {"key": "change_inventory",            "label": "Change in Inventory",            "computed": False, "statement": "CF"},
+    {"key": "change_accounts_payable",     "label": "Change in Accounts Payable",     "computed": False, "statement": "CF"},
+    {"key": "change_other_working_capital","label": "Change in Other Working Capital", "computed": False, "statement": "CF"},
+    {"key": "net_cash_from_operations",    "label": "Net Cash from Operations",       "computed": True,  "statement": "CF"},
+    {"key": "capital_expenditures",        "label": "Capital Expenditures",           "computed": False, "statement": "CF"},
+    {"key": "other_investing",             "label": "Other Investing Activities",      "computed": False, "statement": "CF"},
+    {"key": "net_cash_from_investing",     "label": "Net Cash from Investing",        "computed": True,  "statement": "CF"},
+    {"key": "debt_proceeds",               "label": "Debt Proceeds",                  "computed": False, "statement": "CF"},
+    {"key": "debt_repayment_principal",    "label": "Debt Repayment (Principal)",     "computed": False, "statement": "CF"},
+    {"key": "dividends_distributions",     "label": "Dividends / Distributions",      "computed": False, "statement": "CF"},
+    {"key": "other_financing",             "label": "Other Financing Activities",      "computed": False, "statement": "CF"},
+    {"key": "net_cash_from_financing",     "label": "Net Cash from Financing",        "computed": True,  "statement": "CF"},
+    {"key": "net_change_in_cash",          "label": "Net Change in Cash",             "computed": True,  "statement": "CF"},
     # Cross-statement computed — components come from IS + BS
-    {"key": "total_debt_service",          "label": "Total Debt Service",             "computed": True},
-    {"key": "uca_cfads",                   "label": "UCA CFADS",                      "computed": True},
+    {"key": "total_debt_service",          "label": "Total Debt Service",             "computed": True,  "statement": "CF"},
+    {"key": "uca_cfads",                   "label": "UCA CFADS",                      "computed": True,  "statement": "CF"},
 ]
 
 # Fast lookup sets
@@ -154,6 +162,10 @@ def compute_cross_statement(is_values: dict, bs_values: dict, cf_values: dict) -
     Compute total_debt_service and uca_cfads — require values from multiple statements.
     is_values / bs_values / cf_values are the raw (non-computed) values for one period.
     Returns {total_debt_service: float|None, uca_cfads: float|None}
+
+    Sign convention: capital_expenditures and debt_repayment_principal are stored as
+    positive values representing absolute cash outflows. neg() is applied here to
+    correctly subtract capex when computing uca_cfads (ncfo - capex).
     """
     interest   = _get(is_values, "interest_expense")
     cpltd      = _get(bs_values, "current_portion_ltd")
