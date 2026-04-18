@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 28c39d8af088
+Revision ID: e41fb146095b
 Revises: 
-Create Date: 2026-04-17 19:22:20.790130
+Create Date: 2026-04-17 19:26:22.960698
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '28c39d8af088'
+revision: str = 'e41fb146095b'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -94,7 +94,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.ForeignKeyConstraint(['spread_id'], ['spreads.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('spread_id', 'version')
     )
     op.create_table('spread_periods',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -160,4 +161,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('loan_types')
+    sa.Enum(name='periodtype').drop(op.get_bind())
+    sa.Enum(name='spreadstatus').drop(op.get_bind())
+    sa.Enum(name='userrole').drop(op.get_bind())
     # ### end Alembic commands ###
