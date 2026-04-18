@@ -10,6 +10,7 @@ async def test_all_tables_created(db):
     expected = {
         "users", "loan_types", "borrowers", "spreads",
         "spread_periods", "spread_line_items", "adjustments",
-        "narrative_versions", "workflow_comments", "audit_log"
+        "narrative_versions", "workflow_comments", "audit_log",
+        "extraction_jobs",   # new
     }
     assert expected.issubset(tables)

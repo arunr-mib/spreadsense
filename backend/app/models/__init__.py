@@ -8,6 +8,7 @@ from app.models.adjustment import Adjustment
 from app.models.narrative_version import NarrativeVersion
 from app.models.workflow_comment import WorkflowComment
 from app.models.audit_log import AuditLog
+from app.models.extraction_job import ExtractionJob, ExtractionStatus
 
 __all__ = [
     "User", "UserRole",
@@ -20,4 +21,5 @@ __all__ = [
     "NarrativeVersion",
     "WorkflowComment",
     "AuditLog",
+    "ExtractionJob", "ExtractionStatus",
 ]
