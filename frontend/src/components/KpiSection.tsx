@@ -10,15 +10,22 @@ interface ThresholdRatio {
   key: keyof PeriodAnalytics['ratios']
   label: string
   threshold: string
-  direction: 'higher' | 'lower'
 }
 
 const THRESHOLD_RATIOS: ThresholdRatio[] = [
-  { key: 'dscr', label: 'DSCR', threshold: '≥ 1.20x', direction: 'higher' },
-  { key: 'leverage', label: 'Leverage (Debt/EBITDA)', threshold: '≤ 4.50x', direction: 'lower' },
-  { key: 'current_ratio', label: 'Current Ratio', threshold: '≥ 1.50x', direction: 'higher' },
-  { key: 'interest_coverage', label: 'Interest Coverage', threshold: '≥ 2.00x', direction: 'higher' },
+  { key: 'dscr', label: 'DSCR', threshold: '≥ 1.20x' },
+  { key: 'leverage', label: 'Leverage (Debt/EBITDA)', threshold: '≤ 4.50x' },
+  { key: 'current_ratio', label: 'Current Ratio', threshold: '≥ 1.50x' },
+  { key: 'interest_coverage', label: 'Interest Coverage', threshold: '≥ 2.00x' },
 ]
+
+// Pre-computed maps for O(1) lookups in the table
+const THRESHOLD_MAP = new Map(THRESHOLD_RATIOS.map(r => [r.key, r.threshold]))
+const RATIO_LABEL_MAP = new Map<string, string>([
+  ['ebitda_margin', 'EBITDA Margin'],
+  ['gross_margin', 'Gross Margin'],
+  ['net_profit_margin', 'Net Profit Margin'],
+])
 
 const ALL_RATIOS: { key: keyof PeriodAnalytics['ratios']; label: string }[] = [
   { key: 'dscr', label: 'DSCR' },
@@ -67,7 +74,7 @@ function cardStatusColor(key: string, period: PeriodAnalytics): string {
 }
 
 export default function KpiSection({ spreadId }: Props) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['analytics', spreadId],
     queryFn: () => getAnalytics(spreadId),
     staleTime: 30_000,
@@ -76,6 +83,14 @@ export default function KpiSection({ spreadId }: Props) {
   if (isLoading) {
     return (
       <div className="py-12 text-center text-[var(--text-secondary)]">Loading ratios...</div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="py-12 text-center text-[var(--breach)]">
+        Failed to load ratios. Please refresh.
+      </div>
     )
   }
 
@@ -139,10 +154,10 @@ export default function KpiSection({ spreadId }: Props) {
             {(['ebitda_margin', 'gross_margin', 'net_profit_margin'] as const).map((key) => (
               <div key={key} className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-[var(--text-primary)]">
-                  {ALL_RATIOS.find(r => r.key === key)?.label}
+                  {RATIO_LABEL_MAP.get(key)}
                 </span>
                 <span className="text-[var(--text-secondary)] text-xs">
-                  {data.periods
+                  {[...data.periods]
                     .sort((a, b) => a.fiscal_year - b.fiscal_year)
                     .map((p, i) => (
                       <span key={p.period_id}>
@@ -170,7 +185,7 @@ export default function KpiSection({ spreadId }: Props) {
               <th className="text-center px-3 py-3 text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wide">
                 Threshold
               </th>
-              {data.periods
+              {[...data.periods]
                 .sort((a, b) => a.fiscal_year - b.fiscal_year)
                 .map((p) => (
                   <th
@@ -199,9 +214,9 @@ export default function KpiSection({ spreadId }: Props) {
                   {label}
                 </td>
                 <td className="px-3 py-3 text-center text-[var(--text-secondary)] text-xs">
-                  {THRESHOLD_RATIOS.find(r => r.key === key)?.threshold ?? '—'}
+                  {THRESHOLD_MAP.get(key) ?? '—'}
                 </td>
-                {data.periods
+                {[...data.periods]
                   .sort((a, b) => a.fiscal_year - b.fiscal_year)
                   .map((p) => (
                     <td
