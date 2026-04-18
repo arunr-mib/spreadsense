@@ -12,7 +12,6 @@ export default function NarrativeSection({ spreadId }: Props) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [viewingVersion, setViewingVersion] = useState<number | null>(null)
-  const [viewingContent, setViewingContent] = useState<string | null>(null)
 
   // Check if any IS period exists — controls Generate button
   const { data: analytics } = useQuery({
@@ -43,22 +42,20 @@ export default function NarrativeSection({ spreadId }: Props) {
     staleTime: 0,
   })
 
+  // Derived: content of the currently-viewed older version (null when viewing latest)
+  const viewingContent = viewingVersion !== null
+    ? (versions.find(ver => ver.version === viewingVersion)?.content ?? null)
+    : null
+
+  // Sort descending by version (API returns desc, but sort defensively)
+  const sortedVersions = [...versions].sort((a, b) => b.version - a.version)
+
   // Sync editor with latest content when not dirty and viewing latest
   useEffect(() => {
     if (editorRef.current && latest && viewingVersion === null && !isDirty) {
       editorRef.current.innerText = latest.content
     }
   }, [latest, viewingVersion, isDirty])
-
-  // Load selected version content for read-only view
-  useEffect(() => {
-    if (viewingVersion !== null) {
-      const v = versions.find(v => v.version === viewingVersion)
-      if (v) setViewingContent(v.content)
-    } else {
-      setViewingContent(null)
-    }
-  }, [viewingVersion, versions])
 
   const invalidateNarrative = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['narrative', spreadId] })
@@ -92,13 +89,7 @@ export default function NarrativeSection({ spreadId }: Props) {
 
   const handleRestore = () => {
     if (viewingContent === null) return
-    saveMutation.mutate(viewingContent, {
-      onSuccess: (data) => {
-        setViewingVersion(null)
-        setViewingContent(null)
-        if (editorRef.current) editorRef.current.innerText = data.content
-      },
-    })
+    saveMutation.mutate(viewingContent)
   }
 
   const handleGenerate = () => {
@@ -122,6 +113,12 @@ export default function NarrativeSection({ spreadId }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleSave])
 
+  if (isLoading) {
+    return (
+      <div className="py-12 text-center text-[var(--text-secondary)]">Loading narrative...</div>
+    )
+  }
+
   const noNarrativeYet = !isLoading && (isError || !latest)
 
   return (
@@ -129,7 +126,7 @@ export default function NarrativeSection({ spreadId }: Props) {
       {/* Header bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {versions.length > 0 && (
+          {sortedVersions.length > 0 && (
             <select
               value={viewingVersion ?? ''}
               onChange={(e) => {
@@ -138,8 +135,8 @@ export default function NarrativeSection({ spreadId }: Props) {
               }}
               className="text-sm border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--bg-card)] text-[var(--text-primary)]"
             >
-              <option value="">Latest (v{latest?.version})</option>
-              {versions.slice(1).map((v) => (
+              <option value="">Latest (v{latest?.version ?? '…'})</option>
+              {sortedVersions.slice(1).map((v) => (
                 <option key={v.id} value={v.version}>
                   v{v.version} — {v.created_by_name} · {new Date(v.created_at).toLocaleDateString()}
                 </option>
