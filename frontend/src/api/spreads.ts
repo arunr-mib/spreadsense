@@ -6,6 +6,11 @@ export async function getSpreads(): Promise<Spread[]> {
   return data
 }
 
+export async function getSpreadsByBorrowerId(borrowerId: number): Promise<Spread[]> {
+  const { data } = await apiClient.get<Spread[]>(`/spreads/?borrower_id=${borrowerId}`)
+  return data
+}
+
 export async function createSpread(payload: {
   borrower_id: number
   deal_name: string
