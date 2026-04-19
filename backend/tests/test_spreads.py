@@ -95,3 +95,34 @@ async def test_analyst_cannot_access_others_spread(client, analyst_headers, sr_h
 async def test_unauthenticated_spread_access(client):
     resp = await client.get("/spreads/")
     assert resp.status_code == 401
+
+
+async def test_filter_by_borrower_id(client, analyst_headers, borrower_id):
+    """Analyst sees only their own spreads for a specific borrower."""
+    r1 = await client.post("/spreads/", json={"borrower_id": borrower_id, "deal_name": "My Borrower Deal"}, headers=analyst_headers)
+    assert r1.status_code == 201
+
+    reg = await client.post("/auth/register", json={
+        "email": "analyst2_s@bank.com", "password": "password123",
+        "full_name": "Analyst Two", "role": "analyst"
+    })
+    login2 = await client.post("/auth/login", json={"email": "analyst2_s@bank.com", "password": "password123"})
+    headers2 = {"Authorization": f"Bearer {login2.json()['access_token']}"}
+    r2 = await client.post("/spreads/", json={"borrower_id": borrower_id, "deal_name": "Other Analyst Deal"}, headers=headers2)
+    assert r2.status_code == 201
+
+    resp = await client.get(f"/spreads/?borrower_id={borrower_id}", headers=analyst_headers)
+    assert resp.status_code == 200
+    names = [s["deal_name"] for s in resp.json()]
+    assert "My Borrower Deal" in names
+    assert "Other Analyst Deal" not in names
+
+
+async def test_filter_by_borrower_id_sr_sees_all(client, sr_headers, analyst_headers, borrower_id):
+    """sr_credit_analyst sees all spreads for a borrower regardless of ownership."""
+    await client.post("/spreads/", json={"borrower_id": borrower_id, "deal_name": "Analyst SR Deal"}, headers=analyst_headers)
+
+    resp = await client.get(f"/spreads/?borrower_id={borrower_id}", headers=sr_headers)
+    assert resp.status_code == 200
+    names = [s["deal_name"] for s in resp.json()]
+    assert "Analyst SR Deal" in names

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
@@ -21,10 +22,11 @@ async def create_spread(
 
 @router.get("/", response_model=list[SpreadRead])
 async def list_spreads(
+    borrower_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return await service.list_spreads(user, db)
+    return await service.list_spreads(user, db, borrower_id=borrower_id)
 
 
 @router.get("/{spread_id}", response_model=SpreadRead)
