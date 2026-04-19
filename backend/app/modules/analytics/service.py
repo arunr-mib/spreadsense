@@ -21,7 +21,7 @@ def _get(d: dict, key: str) -> float | None:
     return float(v) if v is not None else None
 
 # Default thresholds — all 4 threshold ratios
-_DEFAULTS = {
+DEFAULT_THRESHOLDS = {
     "dscr_min": 1.20,
     "leverage_max": 4.50,
     "current_ratio_min": 1.50,
@@ -119,7 +119,7 @@ async def get_analytics(spread_id: int, user: User, db: AsyncSession) -> SpreadA
         raise HTTPException(status_code=404, detail="Spread not found")
 
     # Build thresholds — override defaults from loan type if set
-    thresholds = dict(_DEFAULTS)
+    thresholds = dict(DEFAULT_THRESHOLDS)
     if spread.loan_type_id:
         lt_result = await db.execute(
             select(LoanType).where(LoanType.id == spread.loan_type_id)
