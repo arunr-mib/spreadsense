@@ -82,7 +82,7 @@ async def build_memo_context(
     from app.models.spread_period import SpreadPeriod
     from app.models.spread_line_item import SpreadLineItem
     from app.models.narrative_version import NarrativeVersion
-    from app.modules.analytics.service import _compute_ratios, _DEFAULTS
+    from app.modules.analytics.service import _compute_ratios, DEFAULT_THRESHOLDS
 
     spread = await _get_spread(spread_id, user, db)
 
@@ -145,7 +145,7 @@ async def build_memo_context(
         cf_raw = {i.rma_field_key: float(i.value) for i in all_items
                   if i.statement == "CF" and i.value is not None}
 
-        ratios, breaches, near = _compute_ratios(is_raw, bs_raw, cf_raw, dict(_DEFAULTS))
+        ratios, breaches, near = _compute_ratios(is_raw, bs_raw, cf_raw, dict(DEFAULT_THRESHOLDS))
         period_data.append({
             "fiscal_year": period.fiscal_year,
             "period_type": period.period_type.value
