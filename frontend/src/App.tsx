@@ -3,8 +3,11 @@ import LoginPage from './pages/LoginPage'
 import DealDashboardPage from './pages/DealDashboardPage'
 import DashboardPage from './pages/DashboardPage'
 import SpreadDetailPage from './pages/SpreadDetailPage'
+import BorrowerListPage from './pages/BorrowerListPage'
+import BorrowerOverviewPage from './pages/BorrowerOverviewPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
+import MainLayout from './components/MainLayout'
 
 export default function App() {
   return (
@@ -12,17 +15,21 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<DealDashboardPage />} />
-          <Route path="/spreads/:id" element={<SpreadDetailPage />} />
-          <Route
-            element={
-              <RoleRoute
-                allowedRoles={['sr_credit_analyst', 'admin']}
-                redirectTo="/"
-              />
-            }
-          >
-            <Route path="/dashboard" element={<DashboardPage />} />
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<DealDashboardPage />} />
+            <Route path="/borrowers" element={<BorrowerListPage />} />
+            <Route path="/borrowers/:id" element={<BorrowerOverviewPage />} />
+            <Route path="/spreads/:id" element={<SpreadDetailPage />} />
+            <Route
+              element={
+                <RoleRoute
+                  allowedRoles={['sr_credit_analyst', 'admin']}
+                  redirectTo="/"
+                />
+              }
+            >
+              <Route path="/dashboard" element={<DashboardPage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
