@@ -2,31 +2,16 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getSpreads } from '../api/spreads'
-import { useAuthStore } from '../store/auth'
 import StatusBadge from '../components/StatusBadge'
 import NewSpreadModal from '../components/NewSpreadModal'
 
 export default function DealDashboardPage() {
   const [showModal, setShowModal] = useState(false)
-  const user = useAuthStore((s) => s.user)
-  const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
   const { data: spreads = [], isLoading, isError } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
 
-  const handleLogout = () => { logout(); navigate('/login', { replace: true }) }
-
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
-      <header className="bg-[var(--bg-strip)] px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-[var(--bg-page)]">Deal Dashboard</h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">SpreadSense</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[var(--text-secondary)]">{user?.full_name}</span>
-          <button onClick={handleLogout} className="text-sm text-[var(--text-secondary)] hover:text-[var(--bg-page)]">Sign out</button>
-        </div>
-      </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
