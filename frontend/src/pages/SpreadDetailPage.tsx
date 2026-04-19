@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSpreads } from '../api/spreads'
+import { getBorrowerById } from '../api/borrowers'
 import { getPeriods, createPeriod } from '../api/spreading'
 import SpreadingGrid from '../components/SpreadingGrid'
 import IngestionHub from '../components/IngestionHub'
@@ -24,7 +26,6 @@ const STATEMENT_LABELS: Record<Statement, string> = {
 export default function SpreadDetailPage() {
   const { id } = useParams<{ id: string }>()
   const spreadId = Number(id)
-  const navigate = useNavigate()
   const qc = useQueryClient()
 
   const [activeSection, setActiveSection] = useState<Section>('spread')
@@ -38,6 +39,12 @@ export default function SpreadDetailPage() {
 
   const { data: spreads = [] } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
   const spread = spreads.find((s) => s.id === spreadId)
+
+  const { data: borrower } = useQuery({
+    queryKey: ['borrower', spread?.borrower_id],
+    queryFn: () => getBorrowerById(spread!.borrower_id),
+    enabled: !!spread?.borrower_id,
+  })
 
   const { data: periods = [], isLoading: periodsLoading } = useQuery({
     queryKey: ['periods', spreadId],
@@ -67,9 +74,12 @@ export default function SpreadDetailPage() {
     <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Header */}
       <header className="bg-[var(--bg-card)] border-b border-[var(--border)] px-6 py-4 flex items-center gap-4">
-        <button onClick={() => navigate('/')} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm">
-          ← Dashboard
-        </button>
+        <Link
+          to={`/borrowers/${spread?.borrower_id}`}
+          className="text-[var(--accent)] hover:opacity-80 text-sm"
+        >
+          ← {borrower?.name ?? '...'}
+        </Link>
         <div>
           <h1 className="text-lg font-semibold text-[var(--text-primary)]">{spread?.deal_name ?? 'Spread'}</h1>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5">Spread #{spreadId}</p>
