@@ -115,3 +115,38 @@ export interface CreditMemoMeta {
   collateral: string | null
   updated_at?: string
 }
+
+export interface StatusCounts {
+  draft: number
+  completed: number
+  reviewed: number
+  exported: number
+  total: number
+}
+
+export interface BreachAlert {
+  spread_id: number
+  deal_name: string
+  borrower_name: string
+  ratio_name: string
+  value: number | null
+  threshold: number
+  direction: 'min' | 'max'
+  severity: 'breach' | 'near_threshold'
+}
+
+export interface SpreadSummary {
+  id: number
+  deal_name: string
+  borrower_name: string
+  status: string
+  analyst_name: string
+  alert_count: number
+  updated_at: string
+}
+
+export interface PortfolioSummary {
+  status_counts: StatusCounts
+  breach_alerts: BreachAlert[]
+  spread_summaries: SpreadSummary[]
+}
