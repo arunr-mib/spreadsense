@@ -18,7 +18,8 @@ export default function LoginPage() {
     try {
       const user = await login(email, password)
       setAuth(user)
-      navigate('/')
+      const dest = (user.role === 'sr_credit_analyst' || user.role === 'admin') ? '/dashboard' : '/'
+      navigate(dest)
     } catch {
       setError('Invalid email or password')
     } finally {

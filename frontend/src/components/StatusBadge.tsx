@@ -7,7 +7,7 @@ const STYLES: Record<string, string> = {
   exported: 'bg-[var(--bg-card)] text-[var(--text-secondary)]',
 }
 
-export default function StatusBadge({ status }: { status: Spread['status'] }) {
+export default function StatusBadge({ status }: { status: Spread['status'] | string }) {
   return (
     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${STYLES[status] ?? 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}>
       {status}
