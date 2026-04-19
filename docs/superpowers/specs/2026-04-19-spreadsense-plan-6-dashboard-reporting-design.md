@@ -53,6 +53,7 @@ class BreachAlert(BaseModel):
     ratio_name: str          # e.g. "dscr", "leverage"
     value: float | None
     threshold: float
+    direction: str           # "min" (breach when below) or "max" (breach when above)
     severity: str            # "breach" or "near_threshold"
 
 class SpreadSummary(BaseModel):
@@ -60,7 +61,7 @@ class SpreadSummary(BaseModel):
     deal_name: str
     borrower_name: str
     status: str
-    analyst_name: str
+    analyst_name: str        # resolved from spread.created_by → User.full_name
     alert_count: int         # total breaches + near-threshold for this spread
     updated_at: datetime
 
@@ -69,6 +70,7 @@ class StatusCounts(BaseModel):
     completed: int
     reviewed: int
     exported: int
+    total: int               # sum of all statuses; avoids silent breakage if new statuses added
 
 class PortfolioSummary(BaseModel):
     status_counts: StatusCounts
@@ -81,10 +83,14 @@ class PortfolioSummary(BaseModel):
 **`get_portfolio_summary(user, db)`**
 
 1. Verify caller role is `sr_credit_analyst` or `admin` — raise HTTP 403 otherwise.
-2. Load all spreads (no ownership filter — sr sees all). Join with `Borrower` and `User` tables to resolve `borrower_name` and `analyst_name`.
-3. Compute `status_counts` by grouping on `spread.status`.
-4. For each spread, call the existing `analytics_service.compute_analytics(spread_id, db)` (reuses `analytics/service.py` logic). Take the most recent `actual` period if available; fall back to the most recent period of any type.
-5. Collect `BreachAlert` entries from `period.breaches` (severity `"breach"`) and `period.near_threshold` (severity `"near_threshold"`). Map ratio name → value and threshold using the same `THRESHOLDS` dict already defined in `analytics/service.py`.
+2. Load all spreads (no ownership filter — sr sees all). Join `Spread` with `Borrower` (via `spread.borrower_id`) and `User` (via `spread.created_by`) to resolve `borrower_name` and `analyst_name`. The `created_by` FK is the correct field for analyst attribution; `assigned_reviewer` is not used here.
+3. Compute `status_counts` by grouping on `spread.status`. Set `total = sum of all status buckets`.
+4. For each spread, call the existing `analytics_service.get_analytics(spread_id, user, db)` (three arguments — the `user` arg is the sr_credit_analyst caller, which bypasses the analyst-only ownership filter inside that function). Take the most recent `actual` period if available; fall back to the most recent period of any type. Spreads with no periods produce no alerts.
+5. Collect `BreachAlert` entries:
+   - Rename `_DEFAULTS` in `analytics/service.py` to `DEFAULT_THRESHOLDS` (public) so the portfolio service can import and reference it without coupling to a private symbol. This is a one-line rename in the analytics module.
+   - For each ratio in `period.breaches` → `severity = "breach"`. For each ratio in `period.near_threshold` → `severity = "near_threshold"`.
+   - Per ratio, look up effective thresholds: check `LoanType` overrides on the spread first; fall back to `DEFAULT_THRESHOLDS`. This mirrors the logic already in `analytics/service.py` so threshold values in alerts match what the analytics page shows.
+   - Include `direction` field: `"min"` for dscr, current_ratio, interest_coverage; `"max"` for leverage.
 6. Build `SpreadSummary` entries: `alert_count = len(breaches) + len(near_threshold)`.
 7. Sort `breach_alerts` by severity (breach first), then by deal name. Sort `spread_summaries` by `updated_at` descending.
 8. Return `PortfolioSummary`.
@@ -100,15 +106,20 @@ async def get_portfolio_summary(db, user): ...
 
 Register in `backend/app/main.py` alongside existing routers.
 
-### Tests (`backend/tests/test_portfolio.py`) — 5 tests
+### Analytics module change
 
-1. `test_sr_can_access_summary` — 200, correct status counts
+In `backend/app/modules/analytics/service.py`: rename `_DEFAULTS` → `DEFAULT_THRESHOLDS` (remove the leading underscore). Update all internal usages of `_DEFAULTS` in that file. This is the only change to the analytics module.
+
+### Tests (`backend/tests/test_portfolio.py`) — 6 tests
+
+1. `test_sr_can_access_summary` — 200, correct status counts including `total`
 2. `test_analyst_cannot_access_summary` — 403
-3. `test_breach_alerts_populated` — spread with ratio violation appears in `breach_alerts` with `severity="breach"`
+3. `test_breach_alerts_populated` — spread with ratio violation appears in `breach_alerts` with `severity="breach"` and correct `direction`
 4. `test_near_threshold_included` — spread near threshold appears with `severity="near_threshold"`
 5. `test_empty_portfolio` — no spreads → zero counts, empty arrays
+6. `test_spread_summary_names_resolved` — `spread_summaries[0].borrower_name` and `analyst_name` match the fixture borrower and user (verifies join correctness)
 
-Expected total after Plan 6 backend: 64 + 5 = **69 passing tests**.
+Expected total after Plan 6 backend: 64 + 6 = **70 passing tests**.
 
 ---
 
@@ -116,7 +127,7 @@ Expected total after Plan 6 backend: 64 + 5 = **69 passing tests**.
 
 ### New files
 
-**`frontend/src/types/index.ts`** — add three new interfaces:
+**`frontend/src/types/index.ts`** — add new interfaces:
 
 ```typescript
 export interface StatusCounts {
@@ -124,6 +135,7 @@ export interface StatusCounts {
   completed: number
   reviewed: number
   exported: number
+  total: number
 }
 
 export interface BreachAlert {
@@ -133,6 +145,7 @@ export interface BreachAlert {
   ratio_name: string
   value: number | null
   threshold: number
+  direction: 'min' | 'max'
   severity: 'breach' | 'near_threshold'
 }
 
@@ -161,34 +174,44 @@ getPortfolioSummary(): Promise<PortfolioSummary>
 
 Uses the same `client` axios instance as all other API files.
 
+**`frontend/src/components/RoleRoute.tsx`**
+
+A wrapper component that checks the current user's role (from `useAuthStore`) and redirects if the role is not permitted:
+
+```typescript
+// Props: { allowedRoles: string[]; redirectTo: string; children: ReactNode }
+// If user.role is not in allowedRoles → <Navigate to={redirectTo} replace />
+// Otherwise → renders children
+```
+
+Used in `App.tsx` to gate `/dashboard` to `sr_credit_analyst` and `admin`. This keeps role enforcement at the routing layer and avoids embedding it in individual pages.
+
 **`frontend/src/pages/DashboardPage.tsx`**
 
 Fetches `getPortfolioSummary()` via React Query with key `['portfolio-summary']`.
 
 Renders four sections top-to-bottom:
 
-1. **Header row** — "Portfolio Overview" heading + "Export PDF" button (`window.print()`)
+1. **Header row** — "Portfolio Overview" heading + "Export PDF" button (`window.print()`). Both are wrapped in a `no-print` CSS class so they hide on print.
 2. **KPI cards** (4 cards in a row):
-   - Total Deals — `status_counts` total
+   - Total Deals — `status_counts.total`
    - Awaiting Review — `status_counts.completed` (amber)
    - Ratio Breaches — count of `breach_alerts` where `severity === 'breach'` (red)
    - Exported — `status_counts.exported`
 3. **Middle row** (2 columns):
-   - *Pipeline by Status* — horizontal CSS bar chart from `status_counts`; bars for Draft, Awaiting, Reviewed, Exported; no chart library
-   - *Breach & Near-Threshold Alerts* — table of `breach_alerts` with columns: Deal, Ratio, Value, Threshold; ⛔ for breach, ⚠ for near_threshold
-4. **Spreads table** — `spread_summaries` with columns: Deal Name (link to `/spreads/:id`), Borrower, Status (StatusBadge), Analyst, Alerts, Updated. Three quick-filter tabs above the table: **All**, **Awaiting Review** (status `completed`), **Breaches Only** (alert_count > 0). Active tab in local `useState`; filtering is client-side.
+   - *Pipeline by Status* — horizontal CSS bar chart from `status_counts`; bars for Draft, Awaiting, Reviewed, Exported; no chart library; bar widths computed as `(count / total) * 100%`
+   - *Breach & Near-Threshold Alerts* — table of `breach_alerts` with columns: Deal, Ratio, Value, Threshold; direction shown as "min" or "max" label next to threshold; ⛔ for breach, ⚠ for near_threshold
+4. **Spreads table** — `spread_summaries` with columns: Deal Name (link to `/spreads/:id`), Borrower, Status (`StatusBadge`), Analyst, Alerts, Updated. Three quick-filter tabs above the table: **All**, **Awaiting Review** (status `completed`), **Breaches Only** (alert_count > 0). Active tab in local `useState`; filtering is client-side. Filter tabs are wrapped in `no-print` class.
 
-**PDF export:** "Export PDF" button calls `window.print()`. `@media print` CSS (inline in DashboardPage or in `index.css`) hides the nav bar, filter tabs, and action buttons; displays the four sections page-width with clean spacing.
+**PDF export:** "Export PDF" button calls `window.print()`. `@media print` CSS added to `DashboardPage.tsx` (via a `<style>` tag or Tailwind's `print:` variants) targets elements with the `no-print` class and sets `display: none`. The page's own header section (the `<header>` element at the top of `DashboardPage`) is also hidden on print since it contains the nav and Export button. All four content sections render full-width on print.
 
 ### Modified files
 
 **`frontend/src/App.tsx`**
 
-Add `/dashboard` route protected by `ProtectedRoute`. After login, redirect based on role:
-- `sr_credit_analyst` / `admin` → `/dashboard`
-- `analyst` → `/` (existing deal list)
-
-If an `analyst` navigates directly to `/dashboard`, redirect to `/`.
+1. Import `RoleRoute`.
+2. Add `/dashboard` route wrapped in `RoleRoute` with `allowedRoles={['sr_credit_analyst', 'admin']}` and `redirectTo="/"`.
+3. Post-login redirect logic: read `user.role` from `useAuthStore` after successful login and navigate to `/dashboard` (sr/admin) or `/` (analyst).
 
 ---
 
