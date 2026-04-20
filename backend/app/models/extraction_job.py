@@ -9,8 +9,9 @@ from app.database import Base
 class ExtractionStatus(str, enum.Enum):
     pending = "pending"
     processing = "processing"
-    ready = "ready"          # Claude returned results, awaiting analyst review
-    confirmed = "confirmed"  # Analyst confirmed, data written to grid
+    ready = "ready"
+    confirmed = "confirmed"
+    failed = "failed"
 
 
 class ExtractionJob(Base):
@@ -18,11 +19,11 @@ class ExtractionJob(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     spread_id: Mapped[int] = mapped_column(ForeignKey("spreads.id"), nullable=False)
     filename: Mapped[str] = mapped_column(String(500), nullable=False)
-    file_type: Mapped[str] = mapped_column(String(10), nullable=False)  # pdf | xlsx | docx
+    file_type: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[ExtractionStatus] = mapped_column(
         SAEnum(ExtractionStatus), nullable=False, default=ExtractionStatus.pending
     )
-    # JSON structure: {"IS": {"net_sales": {"value": 1000000.0, "confidence_score": 0.92}}, "BS": {...}, "CF": {...}}
+    phase: Mapped[str] = mapped_column(String(32), nullable=False, default="uploading")
     results: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
