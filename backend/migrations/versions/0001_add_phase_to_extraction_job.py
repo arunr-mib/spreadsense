@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = '0001_phase'
-down_revision: Union[str, Sequence[str], None] = 'eeddf3d4fbd9'
+down_revision: Union[str, Sequence[str], None] = 'cadd08808bae'
 branch_labels = None
 depends_on = None
 
