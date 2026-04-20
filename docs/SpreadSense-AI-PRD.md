@@ -560,6 +560,9 @@ All endpoints follow RESTful conventions. Key routes:
 - [x] Narrative edit and version history
 - [x] Credit memo metadata form
 - [x] PDF export (WeasyPrint, Jinja2 template)
+- [x] Review workflow: status machine (draft→completed→reviewed→exported)
+- [x] Audit history log with transition timeline UI
+- [x] Status filter tabs on deal dashboard
 
 ### Phase 3: Navigation & Portfolio (Completed — Q2 2026)
 
