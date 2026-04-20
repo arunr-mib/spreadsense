@@ -12,6 +12,9 @@ import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
 import NarrativeSection from '../components/NarrativeSection'
 import MemoSection from '../components/MemoSection'
+import WorkflowControls from '../components/WorkflowControls'
+import StatusHistory from '../components/StatusHistory'
+import { useAuthStore } from '../store/auth'
 import type { SpreadPeriod, ExtractionJob } from '../types'
 
 type Statement = 'IS' | 'BS' | 'CF'
@@ -37,6 +40,7 @@ export default function SpreadDetailPage() {
   const [showIngestion, setShowIngestion] = useState(false)
   const [pendingJob, setPendingJob] = useState<ExtractionJob | null>(null)
 
+  const user = useAuthStore((s) => s.user)
   const { data: spreads = [] } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
   const spread = spreads.find((s) => s.id === spreadId)
 
@@ -80,11 +84,20 @@ export default function SpreadDetailPage() {
         >
           ← {borrower?.name ?? '...'}
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-semibold text-[var(--text-primary)]">{spread?.deal_name ?? 'Spread'}</h1>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5">Spread #{spreadId}</p>
         </div>
+        {spread && user && (
+          <WorkflowControls
+            spread={spread}
+            currentUserId={user.id}
+            currentUserRole={user.role}
+            onStatusChange={() => qc.invalidateQueries({ queryKey: ['spreads'] })}
+          />
+        )}
       </header>
+      {spread && <StatusHistory spreadId={spreadId} />}
 
       {/* Persistent ratio strip + sub-nav */}
       <RatioStrip

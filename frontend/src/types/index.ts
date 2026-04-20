@@ -150,3 +150,11 @@ export interface PortfolioSummary {
   breach_alerts: BreachAlert[]
   spread_summaries: SpreadSummary[]
 }
+
+export interface AuditEntry {
+  id: number
+  old_status: string
+  new_status: string
+  changed_by_name: string
+  timestamp: string
+}

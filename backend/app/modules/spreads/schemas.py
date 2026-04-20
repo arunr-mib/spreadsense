@@ -3,6 +3,19 @@ from typing import Optional
 from datetime import datetime
 
 
+class SpreadStatusUpdate(BaseModel):
+    status: str
+
+
+class AuditEntry(BaseModel):
+    id: int
+    old_status: str
+    new_status: str
+    changed_by_name: str
+    timestamp: datetime
+    model_config = {"from_attributes": False}
+
+
 class SpreadCreate(BaseModel):
     borrower_id: int
     deal_name: str
