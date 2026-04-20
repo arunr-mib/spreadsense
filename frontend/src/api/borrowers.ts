@@ -20,3 +20,13 @@ export async function createBorrower(payload: {
   const { data } = await apiClient.post<Borrower>('/borrowers/', payload)
   return data
 }
+
+export async function updateBorrower(id: number, payload: {
+  name?: string
+  industry?: string
+  sic_code?: string
+  fiscal_year_end_month?: number
+}): Promise<Borrower> {
+  const { data } = await apiClient.patch<Borrower>(`/borrowers/${id}`, payload)
+  return data
+}

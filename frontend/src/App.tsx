@@ -6,6 +6,7 @@ import SpreadDetailPage from './pages/SpreadDetailPage'
 import BorrowerListPage from './pages/BorrowerListPage'
 import BorrowerOverviewPage from './pages/BorrowerOverviewPage'
 import BorrowerNewPage from './pages/BorrowerNewPage'
+import BorrowerEditPage from './pages/BorrowerEditPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
 import MainLayout from './components/MainLayout'
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/borrowers" element={<BorrowerListPage />} />
             <Route path="/borrowers/new" element={<BorrowerNewPage />} />
             <Route path="/borrowers/:id" element={<BorrowerOverviewPage />} />
+            <Route path="/borrowers/:id/edit" element={<BorrowerEditPage />} />
             <Route path="/spreads/:id" element={<SpreadDetailPage />} />
             <Route
               element={

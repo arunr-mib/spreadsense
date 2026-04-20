@@ -32,13 +32,23 @@ export default function BorrowerOverviewPage() {
           <Link to="/borrowers" className="text-[var(--accent)] hover:opacity-80 text-sm">
             ← Borrowers
           </Link>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)] mt-2">
-            {borrowerLoading ? (
-              <span className="inline-block w-48 h-6 bg-[var(--border)] rounded animate-pulse" />
-            ) : (
-              borrower?.name ?? 'Borrower'
+          <div className="flex items-center justify-between mt-2">
+            <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+              {borrowerLoading ? (
+                <span className="inline-block w-48 h-6 bg-[var(--border)] rounded animate-pulse" />
+              ) : (
+                borrower?.name ?? 'Borrower'
+              )}
+            </h1>
+            {!borrowerLoading && borrower && (
+              <Link
+                to={`/borrowers/${borrowerId}/edit`}
+                className="px-4 py-2 text-sm border border-[var(--border)] text-[var(--text-secondary)] rounded-lg hover:text-[var(--text-primary)] hover:border-[var(--accent)]"
+              >
+                Edit
+              </Link>
             )}
-          </h1>
+          </div>
         </div>
 
         {/* Metadata cards */}
