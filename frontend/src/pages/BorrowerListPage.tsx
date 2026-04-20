@@ -41,7 +41,15 @@ export default function BorrowerListPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-6xl mx-auto px-6 py-8">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">Borrowers</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Borrowers</h1>
+          <Link
+            to="/borrowers/new"
+            className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 font-medium"
+          >
+            + New Borrower
+          </Link>
+        </div>
 
         {isLoading ? (
           <p className="text-[var(--text-secondary)] text-sm">Loading...</p>

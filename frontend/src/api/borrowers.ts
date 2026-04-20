@@ -11,7 +11,12 @@ export async function getBorrowerById(id: number): Promise<Borrower> {
   return data
 }
 
-export async function createBorrower(name: string): Promise<Borrower> {
-  const { data } = await apiClient.post<Borrower>('/borrowers/', { name })
+export async function createBorrower(payload: {
+  name: string
+  industry?: string
+  sic_code?: string
+  fiscal_year_end_month?: number
+}): Promise<Borrower> {
+  const { data } = await apiClient.post<Borrower>('/borrowers/', payload)
   return data
 }

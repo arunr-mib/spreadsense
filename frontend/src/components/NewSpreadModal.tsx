@@ -36,7 +36,7 @@ export default function NewSpreadModal({ onClose }: Props) {
     if (!dealName) return
     if (isCreatingBorrower) {
       if (!newBorrowerName.trim()) return
-      const borrower = await createBorrower(newBorrowerName.trim())
+      const borrower = await createBorrower({ name: newBorrowerName.trim() })
       spreadMutation.mutate({ borrower_id: borrower.id, deal_name: dealName })
     } else {
       if (!borrowerId) return
