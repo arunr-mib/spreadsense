@@ -40,6 +40,8 @@ async def create_job(
     db.add(job)
     await db.flush()
     await db.refresh(job)
+    # Commit immediately so the background task can find the job via its own session
+    await db.commit()
     return job
 
 

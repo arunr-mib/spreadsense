@@ -24,6 +24,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-development-only}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 30
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
