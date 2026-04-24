@@ -76,11 +76,12 @@ async def run_extraction(job_id: int, file_bytes: bytes) -> None:
         except Exception as exc:
             logger.error("Extraction failed for job %s: %s", job_id, exc)
             try:
-                job = await session.get(ExtractionJob, job_id)
-                if job:
-                    job.status = ExtractionStatus.failed
-                    job.phase = "failed"
-                    await session.commit()
+                async with AsyncSessionFactory() as recovery_session:
+                    j = await recovery_session.get(ExtractionJob, job_id)
+                    if j:
+                        j.status = ExtractionStatus.failed
+                        j.phase = "failed"
+                        await recovery_session.commit()
             except Exception:
                 logger.exception("Failed to mark job %s as failed", job_id)
 
