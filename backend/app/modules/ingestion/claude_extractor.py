@@ -84,9 +84,9 @@ _STMT_LABELS = {"IS": "Income Statement", "BS": "Balance Sheet", "CF": "Cash Flo
 async def extract_statement(document_text: str, statement: Literal["IS", "BS", "CF"]) -> dict:
     """Extract fields for a single statement type: IS, BS, or CF.
 
-Returns:
-    dict mapping rma_field_key -> {"value": float | None, "confidence_score": float}
-"""
+    Returns:
+        dict mapping rma_field_key -> {"value": float | None, "confidence_score": float}
+    """
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set in environment")
 
