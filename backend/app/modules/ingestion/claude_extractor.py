@@ -46,6 +46,67 @@ _NON_COMPUTED_IS = [f["key"] for f in IS_FIELDS if not f["computed"]]
 _NON_COMPUTED_BS = [f["key"] for f in BS_FIELDS if not f["computed"]]
 _NON_COMPUTED_CF = [f["key"] for f in CF_FIELDS if not f["computed"]]
 
+_STMT_FIELDS = {
+    "IS": _NON_COMPUTED_IS,
+    "BS": _NON_COMPUTED_BS,
+    "CF": _NON_COMPUTED_CF,
+}
+
+_SINGLE_STMT_PROMPT = """
+You are a financial spreading analyst. Extract financial figures from the document text below
+and map them to the provided RMA field list for the {statement_label} statement.
+
+Return a JSON object with this structure:
+{{
+  "<rma_field_key>": {{"value": <number or null>, "confidence_score": <0.0-1.0>}}
+}}
+
+Rules:
+- confidence_score 0.85+ means highly confident; below 0.85 means less certain
+- Use null for value if the field is not present
+- All monetary values in the document's base unit (no rescaling)
+- Do NOT include computed/subtotal fields
+
+Field keys to extract: {field_keys}
+
+Document text:
+---
+{document_text}
+---
+
+Return only the JSON object, no markdown, no explanation.
+"""
+
+_STMT_LABELS = {"IS": "Income Statement", "BS": "Balance Sheet", "CF": "Cash Flow"}
+
+
+async def extract_statement(document_text: str, statement: str) -> dict:
+    """Extract fields for a single statement type: IS, BS, or CF."""
+    if not settings.anthropic_api_key:
+        raise RuntimeError("ANTHROPIC_API_KEY is not set in environment")
+
+    import anthropic
+    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+    prompt = _SINGLE_STMT_PROMPT.format(
+        statement_label=_STMT_LABELS[statement],
+        field_keys=", ".join(_STMT_FIELDS[statement]),
+        document_text=document_text[:150_000],
+    )
+
+    message = await client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=2048,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    raw = message.content[0].text.strip()
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        logger.error("Claude returned invalid JSON for %s: %s", statement, raw[:500])
+        raise ValueError(f"Claude returned invalid JSON for {statement}: {e}") from e
+
 
 async def extract_financials(document_text: str) -> dict:
     """
