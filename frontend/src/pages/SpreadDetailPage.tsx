@@ -6,8 +6,7 @@ import { getSpreads } from '../api/spreads'
 import { getBorrowerById } from '../api/borrowers'
 import { getPeriods, createPeriod } from '../api/spreading'
 import SpreadingGrid from '../components/SpreadingGrid'
-import IngestionHub from '../components/IngestionHub'
-import ExtractionReview from '../components/ExtractionReview'
+import ExtractionPanel from '../components/ExtractionPanel'
 import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
 import NarrativeSection from '../components/NarrativeSection'
@@ -15,7 +14,7 @@ import MemoSection from '../components/MemoSection'
 import WorkflowControls from '../components/WorkflowControls'
 import StatusHistory from '../components/StatusHistory'
 import { useAuthStore } from '../store/auth'
-import type { SpreadPeriod, ExtractionJob } from '../types'
+import type { SpreadPeriod } from '../types'
 
 type Statement = 'IS' | 'BS' | 'CF'
 type Section = 'spread' | 'kpis' | 'narrative' | 'memo'
@@ -37,8 +36,7 @@ export default function SpreadDetailPage() {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
   const [newYear, setNewYear] = useState('')
   const [newType, setNewType] = useState<'actual' | 'projected'>('actual')
-  const [showIngestion, setShowIngestion] = useState(false)
-  const [pendingJob, setPendingJob] = useState<ExtractionJob | null>(null)
+  const [showExtractionPanel, setShowExtractionPanel] = useState(false)
 
   const user = useAuthStore((s) => s.user)
   const { data: spreads = [] } = useQuery({ queryKey: ['spreads'], queryFn: getSpreads })
@@ -140,7 +138,7 @@ export default function SpreadDetailPage() {
                 + Add Period
               </button>
               <button
-                onClick={() => setShowIngestion(true)}
+                onClick={() => setShowExtractionPanel(!showExtractionPanel)}
                 className="px-3 py-1 rounded text-sm bg-[var(--bg-page)] text-[var(--accent)] border border-[var(--border)] hover:bg-[var(--bg-card)] shrink-0"
               >
                 📎 Import Document
@@ -176,6 +174,19 @@ export default function SpreadDetailPage() {
                   <span className="text-[var(--breach)] text-xs">Failed (duplicate year?)</span>
                 )}
               </div>
+            )}
+
+            {/* Extraction Panel */}
+            {showExtractionPanel && (
+              <ExtractionPanel
+                spreadId={spreadId}
+                periods={periods}
+                onConfirmed={() => {
+                  setShowExtractionPanel(false)
+                  qc.invalidateQueries({ queryKey: ['line-items'] })
+                  qc.invalidateQueries({ queryKey: ['analytics', spreadId] })
+                }}
+              />
             )}
 
             {/* Statement tabs */}
@@ -222,26 +233,6 @@ export default function SpreadDetailPage() {
         {activeSection === 'memo' && <MemoSection spreadId={spreadId} />}
       </div>
 
-      {showIngestion && (
-        <IngestionHub
-          spreadId={spreadId}
-          onJobReady={(job) => { setShowIngestion(false); setPendingJob(job) }}
-          onClose={() => setShowIngestion(false)}
-        />
-      )}
-      {pendingJob && (
-        <ExtractionReview
-          job={pendingJob}
-          periods={periods}
-          spreadId={spreadId}
-          onConfirmed={() => {
-            setPendingJob(null)
-            qc.invalidateQueries({ queryKey: ['line-items'] })
-            qc.invalidateQueries({ queryKey: ['analytics', spreadId] })
-          }}
-          onClose={() => setPendingJob(null)}
-        />
-      )}
     </div>
   )
 }
