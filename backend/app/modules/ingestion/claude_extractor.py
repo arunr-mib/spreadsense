@@ -4,6 +4,7 @@ Returns: {"IS": {field_key: {"value": float|None, "confidence_score": float}}, "
 """
 import json
 import logging
+from typing import Literal
 from app.config import settings
 from app.modules.ingestion.rma_template import IS_FIELDS, BS_FIELDS, CF_FIELDS
 
@@ -80,10 +81,17 @@ Return only the JSON object, no markdown, no explanation.
 _STMT_LABELS = {"IS": "Income Statement", "BS": "Balance Sheet", "CF": "Cash Flow"}
 
 
-async def extract_statement(document_text: str, statement: str) -> dict:
-    """Extract fields for a single statement type: IS, BS, or CF."""
+async def extract_statement(document_text: str, statement: Literal["IS", "BS", "CF"]) -> dict:
+    """Extract fields for a single statement type: IS, BS, or CF.
+
+Returns:
+    dict mapping rma_field_key -> {"value": float | None, "confidence_score": float}
+"""
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set in environment")
+
+    if statement not in _STMT_FIELDS:
+        raise ValueError(f"Unknown statement type '{statement}'. Must be one of: IS, BS, CF")
 
     import anthropic
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
@@ -96,7 +104,7 @@ async def extract_statement(document_text: str, statement: str) -> dict:
 
     message = await client.messages.create(
         model="claude-opus-4-5",
-        max_tokens=2048,
+        max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
     raw = message.content[0].text.strip()
