@@ -36,21 +36,11 @@ async def ing_spread_id(client, ing_headers, analyst_user_ing, db):
 
 
 async def test_upload_creates_extraction_job(client, ing_headers, ing_spread_id):
-    """Upload a minimal PDF (bytes) — Claude call is mocked."""
+    """Upload a minimal PDF — job is created immediately; extraction runs in background."""
     fake_pdf = b"%PDF-1.4 fake content net sales 1000000"
-    mock_is = {
-        "net_sales": {"value": 1_000_000.0, "confidence_score": 0.95},
-        "cost_of_goods_sold": {"value": 600_000.0, "confidence_score": 0.88},
-        "interest_expense": {"value": 50_000.0, "confidence_score": 0.60},
-    }
-    mock_bs = {}
-    mock_cf = {}
-    with patch("app.modules.ingestion.extractor.extract_text", return_value="mocked text"), \
-         patch("app.modules.ingestion.claude_extractor.extract_statement",
-               new_callable=AsyncMock,
-               side_effect=lambda text, stmt: {
-                   "IS": mock_is, "BS": mock_bs, "CF": mock_cf
-               }[stmt]):
+    # Mock run_extraction at the service layer to prevent DB isolation issues
+    # (background task uses a separate AsyncSessionFactory session, test uses a different one)
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
         resp = await client.post(
             f"/ingestion/upload?spread_id={ing_spread_id}",
             files={"file": ("statement.pdf", io.BytesIO(fake_pdf), "application/pdf")},
@@ -58,18 +48,14 @@ async def test_upload_creates_extraction_job(client, ing_headers, ing_spread_id)
         )
     assert resp.status_code == 201
     data = resp.json()
-    assert data["status"] == "ready"
-    assert "IS" in data["results"]
-    assert data["results"]["IS"]["net_sales"]["confidence_score"] == 0.95
+    assert data["id"] is not None
+    assert data["status"] == "processing"
+    assert "phase" in data
 
 
 async def test_get_extraction_job(client, ing_headers, ing_spread_id):
     fake_pdf = b"%PDF-1.4 test"
-    mock_is = {"net_sales": {"value": 500_000.0, "confidence_score": 0.90}}
-    with patch("app.modules.ingestion.extractor.extract_text", return_value="mocked text"), \
-         patch("app.modules.ingestion.claude_extractor.extract_statement",
-               new_callable=AsyncMock,
-               side_effect=lambda text, stmt: {"IS": mock_is, "BS": {}, "CF": {}}[stmt]):
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
         create_resp = await client.post(
             f"/ingestion/upload?spread_id={ing_spread_id}",
             files={"file": ("s.pdf", io.BytesIO(fake_pdf), "application/pdf")},
@@ -81,20 +67,27 @@ async def test_get_extraction_job(client, ing_headers, ing_spread_id):
     assert resp.json()["id"] == job_id
 
 
-async def test_confirm_extraction_populates_grid(client, ing_headers, ing_spread_id):
+async def test_confirm_extraction_populates_grid(client, ing_headers, ing_spread_id, db):
     fake_pdf = b"%PDF-1.4 test"
     mock_is = {"net_sales": {"value": 1_000_000.0, "confidence_score": 0.95}}
     mock_bs = {"cash": {"value": 200_000.0, "confidence_score": 0.91}}
-    with patch("app.modules.ingestion.extractor.extract_text", return_value="mocked text"), \
-         patch("app.modules.ingestion.claude_extractor.extract_statement",
-               new_callable=AsyncMock,
-               side_effect=lambda text, stmt: {"IS": mock_is, "BS": mock_bs, "CF": {}}[stmt]):
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
         create_resp = await client.post(
             f"/ingestion/upload?spread_id={ing_spread_id}",
             files={"file": ("s.pdf", io.BytesIO(fake_pdf), "application/pdf")},
             headers=ing_headers,
         )
     job_id = create_resp.json()["id"]
+
+    # Simulate extraction completing: set status=ready and results via the test db session
+    from app.models.extraction_job import ExtractionJob, ExtractionStatus
+    from sqlalchemy import select
+    result = await db.execute(select(ExtractionJob).where(ExtractionJob.id == job_id))
+    job = result.scalar_one()
+    job.status = ExtractionStatus.ready
+    job.phase = "ready"
+    job.results = {"IS": mock_is, "BS": mock_bs, "CF": {}}
+    await db.flush()
 
     # Create a period to populate
     period_resp = await client.post(
@@ -135,11 +128,7 @@ async def ing2_headers(client, analyst2_user_ing):
 async def test_get_job_404_for_other_analyst(client, ing_headers, ing2_headers, ing_spread_id):
     """Analyst 2 cannot see Analyst 1's extraction job."""
     fake_pdf = b"%PDF-1.4 test"
-    mock_is = {"net_sales": {"value": 100.0, "confidence_score": 0.9}}
-    with patch("app.modules.ingestion.extractor.extract_text", return_value="mocked text"), \
-         patch("app.modules.ingestion.claude_extractor.extract_statement",
-               new_callable=AsyncMock,
-               side_effect=lambda text, stmt: {"IS": mock_is, "BS": {}, "CF": {}}[stmt]):
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
         create_resp = await client.post(
             f"/ingestion/upload?spread_id={ing_spread_id}",
             files={"file": ("s.pdf", io.BytesIO(fake_pdf), "application/pdf")},
@@ -148,3 +137,36 @@ async def test_get_job_404_for_other_analyst(client, ing_headers, ing2_headers, 
     job_id = create_resp.json()["id"]
     resp = await client.get(f"/ingestion/{job_id}", headers=ing2_headers)
     assert resp.status_code == 404
+
+
+async def test_upload_returns_processing_status(client, ing_headers, ing_spread_id):
+    """POST /ingestion/upload returns 201 with a job id and phase field immediately."""
+    fake_pdf = b"%PDF-1.4 fake content"
+
+    # Mock run_extraction at the service layer to avoid DB isolation issues
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
+        resp = await client.post(
+            f"/ingestion/upload?spread_id={ing_spread_id}",
+            files={"file": ("statement.pdf", io.BytesIO(fake_pdf), "application/pdf")},
+            headers=ing_headers,
+        )
+    assert resp.status_code == 201
+    assert resp.json()["id"] is not None
+    assert "phase" in resp.json()
+
+
+async def test_get_job_returns_phase_field(client, ing_headers, ing_spread_id):
+    """GET /ingestion/{job_id} returns phase field."""
+    fake_pdf = b"%PDF-1.4 test"
+    with patch("app.modules.ingestion.service.run_extraction", new_callable=AsyncMock):
+        create_resp = await client.post(
+            f"/ingestion/upload?spread_id={ing_spread_id}",
+            files={"file": ("s.pdf", io.BytesIO(fake_pdf), "application/pdf")},
+            headers=ing_headers,
+        )
+    job_id = create_resp.json()["id"]
+    resp = await client.get(f"/ingestion/{job_id}", headers=ing_headers)
+    assert resp.status_code == 200
+    assert "phase" in resp.json()
+    assert resp.json()["phase"] in ("ready", "uploading", "parsing",
+                                    "extracting_is", "extracting_bs", "extracting_cf", "failed")
