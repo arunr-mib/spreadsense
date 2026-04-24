@@ -1,11 +1,16 @@
 import logging
+from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from fastapi import HTTPException, status
+from fastapi import UploadFile
 
+from app.database import AsyncSessionFactory
 from app.models.extraction_job import ExtractionJob, ExtractionStatus
+from app.models.spread import Spread
 from app.models.spread_line_item import SpreadLineItem
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.modules.ingestion.extractor import extract_text, detect_file_type
 import app.modules.ingestion.claude_extractor as _claude_extractor
 from app.modules.ingestion.rma_template import COMPUTED_FIELDS
@@ -13,14 +18,15 @@ from app.modules.ingestion.rma_template import COMPUTED_FIELDS
 logger = logging.getLogger(__name__)
 
 
-async def upload_and_extract(
+async def create_job(
+    file: UploadFile,
+    file_bytes: bytes,
     spread_id: int,
-    filename: str,
-    content: bytes,
     user: User,
     db: AsyncSession,
 ) -> ExtractionJob:
-    """Upload file, run Claude extraction, return ExtractionJob with results."""
+    """Validate file and create ExtractionJob immediately. Extraction runs separately."""
+    filename = file.filename or "upload"
     file_type = detect_file_type(filename)
 
     job = ExtractionJob(
@@ -28,35 +34,71 @@ async def upload_and_extract(
         filename=filename,
         file_type=file_type,
         status=ExtractionStatus.processing,
+        phase="uploading",
         created_by=user.id,
     )
     db.add(job)
     await db.flush()
     await db.refresh(job)
+    return job
 
-    try:
-        document_text = extract_text(content, file_type)
-        results = await _claude_extractor.extract_financials(document_text)
-        job.status = ExtractionStatus.ready
-        job.results = results
-    except Exception as e:
-        logger.error("Extraction failed for job %s: %s", job.id, e)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Extraction failed: {e}",
+
+async def run_extraction(job_id: int, file_bytes: bytes) -> None:
+    """Background task: extract IS/BS/CF from file_bytes, updating phase after each step."""
+    async with AsyncSessionFactory() as session:
+        try:
+            job = await session.get(ExtractionJob, job_id)
+            if not job:
+                logger.error("run_extraction: job %s not found", job_id)
+                return
+
+            job.phase = "parsing"
+            await session.commit()
+            text = extract_text(file_bytes, job.file_type)
+
+            job.phase = "extracting_is"
+            await session.commit()
+            is_fields = await _claude_extractor.extract_statement(text, "IS")
+
+            job.phase = "extracting_bs"
+            await session.commit()
+            bs_fields = await _claude_extractor.extract_statement(text, "BS")
+
+            job.phase = "extracting_cf"
+            await session.commit()
+            cf_fields = await _claude_extractor.extract_statement(text, "CF")
+
+            job.results = {"IS": is_fields, "BS": bs_fields, "CF": cf_fields}
+            job.status = ExtractionStatus.ready
+            job.phase = "ready"
+            await session.commit()
+
+        except Exception as exc:
+            logger.error("Extraction failed for job %s: %s", job_id, exc)
+            try:
+                job = await session.get(ExtractionJob, job_id)
+                if job:
+                    job.status = ExtractionStatus.failed
+                    job.phase = "failed"
+                    await session.commit()
+            except Exception:
+                logger.exception("Failed to mark job %s as failed", job_id)
+
+
+async def get_job(job_id: int, user: User, db: AsyncSession) -> Optional[ExtractionJob]:
+    """Return job if visible to user (analysts see own spread's jobs only)."""
+    result = await db.execute(
+        select(ExtractionJob)
+        .join(Spread, ExtractionJob.spread_id == Spread.id)
+        .where(ExtractionJob.id == job_id)
+        .where(
+            or_(
+                user.role != UserRole.analyst,
+                Spread.created_by == user.id,
+            )
         )
-
-    await db.flush()
-    await db.refresh(job)
-    return job
-
-
-async def get_job(job_id: int, db: AsyncSession) -> ExtractionJob:
-    result = await db.execute(select(ExtractionJob).where(ExtractionJob.id == job_id))
-    job = result.scalar_one_or_none()
-    if not job:
-        raise HTTPException(status_code=404, detail="Extraction job not found")
-    return job
+    )
+    return result.scalar_one_or_none()
 
 
 async def confirm_extraction(
@@ -66,11 +108,10 @@ async def confirm_extraction(
     user: User,
     db: AsyncSession,
 ) -> ExtractionJob:
-    """Write all extracted fields into the grid, applying analyst overrides where provided.
-
-    overrides keys are "STMT.field_key" (e.g. "IS.net_sales"); values replace Claude's extracted value.
-    """
-    job = await get_job(job_id, db)
+    """Write extracted fields into the spread grid, applying analyst overrides."""
+    job = await get_job(job_id, user, db)
+    if not job:
+        raise HTTPException(status_code=404, detail="Extraction job not found")
     if job.status not in (ExtractionStatus.ready,):
         raise HTTPException(status_code=400, detail=f"Job is not ready (status: {job.status})")
 
@@ -81,16 +122,11 @@ async def confirm_extraction(
             if field_key in COMPUTED_FIELDS:
                 continue
             composite_key = f"{statement}.{field_key}"
-            # Apply analyst override if present, otherwise use Claude's extracted value
-            if composite_key in overrides:
-                value = overrides[composite_key]
-            else:
-                value = extraction.get("value")
+            value = overrides.get(composite_key, extraction.get("value"))
             confidence = extraction.get("confidence_score", 0.0)
             if value is None:
                 continue
 
-            # Upsert line item
             existing = await db.execute(
                 select(SpreadLineItem).where(
                     SpreadLineItem.spread_period_id == period_id,
@@ -98,7 +134,7 @@ async def confirm_extraction(
                 )
             )
             row = existing.scalar_one_or_none()
-            source = job.file_type  # "pdf" | "xlsx" | "docx"
+            source = job.file_type
 
             if row:
                 row.value = value
