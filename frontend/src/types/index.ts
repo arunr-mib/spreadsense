@@ -63,7 +63,8 @@ export interface ExtractionJob {
   spread_id: number
   filename: string
   file_type: string
-  status: 'pending' | 'processing' | 'ready' | 'confirmed'
+  status: 'pending' | 'processing' | 'ready' | 'confirmed' | 'failed'
+  phase: string
   results: Record<string, Record<string, { value: number | null; confidence_score: number }>> | null
   created_at: string
 }
