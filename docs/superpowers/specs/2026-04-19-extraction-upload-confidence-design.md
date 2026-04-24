@@ -1,7 +1,8 @@
 # SpreadSense Plan 8: PDF Upload Progress & Confidence Review — Design Spec
 
 **Date:** 2026-04-19
-**Status:** Approved
+**Last Updated:** 2026-04-21
+**Status:** Implemented
 
 ---
 
@@ -315,3 +316,18 @@ Add `phase: string` to `ExtractionJob` interface.
 - Batch upload (multiple PDFs in queue — Phase 5 item)
 - Extraction confidence threshold configuration (hardcoded: HIGH ≥ 0.85, MED ≥ 0.60, LOW < 0.60)
 - File persistence to S3 (files processed in-memory, not stored — separate Phase 4 item)
+
+---
+
+## Implementation Notes (added 2026-04-21)
+
+Implemented as Plan 8 across 9 tasks. Key deviations and refinements from the original spec:
+
+- **`extract_statement(text, statement)` added to `claude_extractor.py`**: The spec referenced `claude_extract(text, stmt)` generically; implementation uses `extract_statement` with `Literal["IS", "BS", "CF"]` type annotation, invalid-statement guard, and `max_tokens=4096`.
+- **`run_extraction` error handler**: Uses a separate `AsyncSessionFactory` recovery session to mark the job failed, avoiding `UnboundLocalError` if the original session fails before fetching the job.
+- **`BackgroundTasks = ...` injection**: Python syntax requires `...` (Ellipsis) as a default when `BackgroundTasks` follows parameters with defaults in the upload handler signature.
+- **`ExtractionPanel` state transitions**: Moved from render-time `if` block to `useEffect([job?.status, panelState])` to avoid React side-effect-during-render anti-pattern.
+- **Test isolation for `run_extraction`**: In ASGI test transport, `BackgroundTasks` run synchronously. Tests mock `service.run_extraction` at the service layer to prevent the background task's `AsyncSessionFactory` session from conflicting with the test transaction.
+- **Migration chain**: `down_revision` points to `cadd08808bae` (the credit_memo_meta migration), not `eeddf3d4fbd9` as initially drafted — corrected to avoid a two-head Alembic branch.
+
+Final test counts: 71/71 backend tests passing · TypeScript compiles clean.

@@ -1,7 +1,7 @@
 # SpreadSense AI — Product Requirements Document
 
-**Document Status:** Draft v1.0
-**Date:** April 19, 2026
+**Document Status:** Draft v1.1
+**Date:** April 21, 2026
 **Owner:** Arun Rajendiran
 **Reviewers:** Credit Technology, Risk Management, Engineering
 **Confidentiality:** Internal — Not for Distribution
@@ -574,12 +574,12 @@ All endpoints follow RESTful conventions. Key routes:
 - [x] Breach alert summary cards
 - [x] Enriched deal table with filters
 
-### Phase 4: Production Readiness (Target — Q3 2026)
+### Phase 4: Production Readiness (In Progress — Q3 2026)
 
 - [ ] Supabase Auth migration (OAuth / SSO)
 - [ ] File storage migration to S3/Supabase Storage
-- [ ] PDF upload UI with progress tracking
-- [ ] Extraction confidence score UI (color-coded review queue)
+- [x] PDF upload UI with real-time per-statement progress tracking (ExtractionPanel — async BackgroundTask pipeline, phase column, 2s polling)
+- [x] Extraction confidence score UI (color-coded review queue — HIGH/MED/LOW tiers, inline override inputs, sorted by confidence ascending)
 - [ ] AI call logging + audit table
 - [ ] User management admin panel
 - [ ] Performance testing (50 concurrent users)
