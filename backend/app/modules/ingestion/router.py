@@ -17,7 +17,7 @@ MAX_BYTES = 50 * 1024 * 1024  # 50 MB
 async def upload(
     spread_id: int = Query(...),
     file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = ...,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -43,7 +43,7 @@ async def get_job(
 ):
     job = await service.get_job(job_id, user, db)
     if not job:
-        raise HTTPException(status_code=404, detail="Extraction job not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extraction job not found")
     return job
 
 
