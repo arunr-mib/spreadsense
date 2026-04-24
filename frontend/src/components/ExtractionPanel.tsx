@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadDocument, getExtractionJob, confirmExtraction } from '../api/ingestion'
 import type { ExtractionJob, SpreadPeriod } from '../types'
@@ -79,7 +79,8 @@ export default function ExtractionPanel({ spreadId, periods, onConfirmed }: Prop
   })
 
   // Transition when job reaches terminal state
-  if (job && panelState === 'extracting') {
+  useEffect(() => {
+    if (panelState !== 'extracting' || !job) return
     if (job.status === 'ready') {
       // Pre-seed overrides for MED/LOW fields
       const seed: Record<string, number> = {}
@@ -95,7 +96,7 @@ export default function ExtractionPanel({ spreadId, periods, onConfirmed }: Prop
     } else if (job.status === 'failed') {
       setPanelState('error')
     }
-  }
+  }, [job?.status, panelState])
 
   // Confirm mutation
   const confirmMut = useMutation({
