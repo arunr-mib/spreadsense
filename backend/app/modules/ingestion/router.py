@@ -17,7 +17,7 @@ MAX_BYTES = 50 * 1024 * 1024  # 50 MB
 async def upload(
     spread_id: int = Query(...),
     file: UploadFile = File(...),
-    background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks = ...,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
