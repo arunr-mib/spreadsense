@@ -8,7 +8,14 @@ from app.main import app as fastapi_app
 from app.database import Base, get_db
 import app.models  # noqa: F401 — ensure all models are registered with Base
 
-TEST_DB_URL = "postgresql+asyncpg://fst_user:fst_pass@localhost:5434/fst_db"
+import os
+# Use a dedicated test database so tests never touch production data.
+# Inside the container: postgres:5432/fst_test_db
+# From the host (for IDE runners): localhost:5434/fst_test_db
+TEST_DB_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://fst_user:fst_pass@postgres:5432/fst_test_db",
+)
 
 
 @pytest.fixture(scope="session")
@@ -34,11 +41,25 @@ async def engine():
 
 @pytest_asyncio.fixture
 async def db(engine):
-    """Per-test database session that rolls back all changes after each test."""
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with session_factory() as session:
-        yield session
-        await session.rollback()
+    """Per-test session wrapped in a connection-level transaction.
+
+    Using join_transaction_mode="create_savepoint" means any session.commit()
+    calls inside application code (e.g. service.create_job) release a savepoint
+    rather than committing to disk. The outer connection transaction is always
+    rolled back at teardown, giving true per-test isolation.
+    """
+    async with engine.connect() as conn:
+        await conn.begin()
+        session = AsyncSession(
+            bind=conn,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+        try:
+            yield session
+        finally:
+            await session.close()
+            await conn.rollback()
 
 
 @pytest_asyncio.fixture
