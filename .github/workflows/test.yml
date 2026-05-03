@@ -1,0 +1,80 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fst_user
+          POSTGRES_PASSWORD: fst_pass
+          POSTGRES_DB: fst_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fst_user -d fst_test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          # CI Postgres is reachable on localhost (no Docker network)
+          TEST_DATABASE_URL: postgresql+asyncpg://fst_user:fst_pass@localhost:5432/fst_test_db
+          # Use a placeholder API key — extraction tests mock the Claude call
+          ANTHROPIC_API_KEY: ci-placeholder-key
+          JWT_SECRET: ci-jwt-secret-not-for-production
+        run: |
+          # Skip memo PDF tests that need WeasyPrint system libs (libgobject)
+          python -m pytest tests/ -v --tb=short --ignore=tests/test_memo.py
+
+  frontend:
+    name: Frontend (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript compile check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
