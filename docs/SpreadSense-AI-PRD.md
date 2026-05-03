@@ -1,10 +1,12 @@
 # SpreadSense AI — Product Requirements Document
 
-**Document Status:** Draft v1.1
-**Date:** April 21, 2026
+**Document Status:** Draft v1.2 — First production deployment
+**Date:** May 3, 2026 (originally April 21, 2026)
 **Owner:** Arun Rajendiran
 **Reviewers:** Credit Technology, Risk Management, Engineering
 **Confidentiality:** Internal — Not for Distribution
+**Live URL:** https://spreadsense.vercel.app
+**Source:** https://github.com/arunr-mib/spreadsense (private)
 
 ---
 
@@ -580,6 +582,12 @@ All endpoints follow RESTful conventions. Key routes:
 - [ ] File storage migration to S3/Supabase Storage
 - [x] PDF upload UI with real-time per-statement progress tracking (ExtractionPanel — async BackgroundTask pipeline, phase column, 2s polling)
 - [x] Extraction confidence score UI (color-coded review queue — HIGH/MED/LOW tiers, inline override inputs, sorted by confidence ascending)
+- [x] **First production deployment** (May 3, 2026) — Frontend on Vercel, FastAPI backend on Railway, Postgres on Neon. Public URL: https://spreadsense.vercel.app
+- [x] **Real SEC 10-K extraction validated end-to-end** — DocuSign FY2026 10-K (157 pages, 392k chars) yielded 23/33 non-null fields with HIGH confidence in <30 seconds
+- [x] **Smart financial-statements section slicing** — Regex-locates the consolidated statements block and sends only the relevant 100k-char window to Claude (~75% token cost reduction vs naive truncation)
+- [x] **Image-based PDF guard** — Fast-fails with a clear error when PyMuPDF extracts <200 chars, instead of silently returning all-null
+- [x] **Test infrastructure hardening** — Dedicated test database, savepoint-based isolation so application commits don't pollute the test transaction (75/75 tests passing)
+- [x] **CI on every push** — GitHub Actions runs backend pytest (with ephemeral Postgres) plus frontend `tsc --noEmit` and production build
 - [ ] AI call logging + audit table
 - [ ] User management admin panel
 - [ ] Performance testing (50 concurrent users)
