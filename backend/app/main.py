@@ -1,3 +1,16 @@
+import logging
+
+# Ensure app loggers emit INFO+ to stdout alongside uvicorn's output.
+# basicConfig is a no-op once uvicorn has set up handlers, so we attach our own.
+_app_handler = logging.StreamHandler()
+_app_handler.setLevel(logging.INFO)
+_app_handler.setFormatter(logging.Formatter("%(levelname)s:     %(name)s - %(message)s"))
+for _name in ("app.modules.ingestion.service", "app.modules.ingestion.claude_extractor"):
+    _log = logging.getLogger(_name)
+    _log.setLevel(logging.INFO)
+    _log.addHandler(_app_handler)
+    _log.propagate = False  # avoid duplicate output via uvicorn root
+
 from fastapi import FastAPI
 from app.modules.auth.router import router as auth_router
 from app.modules.borrowers.router import router as borrowers_router

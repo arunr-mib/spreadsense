@@ -57,6 +57,15 @@ async def run_extraction(job_id: int, file_bytes: bytes) -> None:
             job.phase = "parsing"
             await session.commit()
             text = extract_text(file_bytes, job.file_type)
+            logger.warning(
+                "Extracted %d chars from %s (job %s) — first 200: %s",
+                len(text), job.file_type, job_id, repr(text[:200]),
+            )
+            if len(text.strip()) < 200:
+                raise ValueError(
+                    f"PDF text extraction yielded only {len(text)} chars — "
+                    "file may be image-based or corrupt"
+                )
 
             job.phase = "extracting_is"
             await session.commit()

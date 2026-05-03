@@ -43,15 +43,20 @@ Document text:
 Return only the JSON object, no markdown, no explanation.
 """
 
-_NON_COMPUTED_IS = [f["key"] for f in IS_FIELDS if not f["computed"]]
-_NON_COMPUTED_BS = [f["key"] for f in BS_FIELDS if not f["computed"]]
-_NON_COMPUTED_CF = [f["key"] for f in CF_FIELDS if not f["computed"]]
+_NON_COMPUTED_IS = [(f["key"], f["label"]) for f in IS_FIELDS if not f["computed"]]
+_NON_COMPUTED_BS = [(f["key"], f["label"]) for f in BS_FIELDS if not f["computed"]]
+_NON_COMPUTED_CF = [(f["key"], f["label"]) for f in CF_FIELDS if not f["computed"]]
 
 _STMT_FIELDS = {
     "IS": _NON_COMPUTED_IS,
     "BS": _NON_COMPUTED_BS,
     "CF": _NON_COMPUTED_CF,
 }
+
+
+def _format_field_list(fields: list[tuple[str, str]]) -> str:
+    """Format fields as 'key (Label)' pairs so Claude can match document terminology."""
+    return ", ".join(f"{key} ({label})" for key, label in fields)
 
 _SINGLE_STMT_PROMPT = """
 You are a financial spreading analyst. Extract financial figures from the document text below
@@ -63,12 +68,17 @@ Return a JSON object with this structure:
 }}
 
 Rules:
+- Each field is listed as: field_key (Human-readable label). Use the label to find the matching
+  line item in the document, then return the value under the field_key.
 - confidence_score 0.85+ means highly confident; below 0.85 means less certain
-- Use null for value if the field is not present
-- All monetary values in the document's base unit (no rescaling)
-- Do NOT include computed/subtotal fields
+- Use null for value if the field is not present in the document
+- All monetary values in the document's base unit (no rescaling, no unit conversion)
+- Do NOT include computed/subtotal fields — only the raw input fields listed below
+- For 10-K filings: "Revenues" or "Total revenues" maps to net_sales; "Cost of revenues" maps
+  to cost_of_goods_sold; look for the most recent fiscal year column
 
-Field keys to extract: {field_keys}
+Fields to extract (key → label):
+{field_keys}
 
 Document text:
 ---
@@ -98,19 +108,33 @@ async def extract_statement(document_text: str, statement: Literal["IS", "BS", "
 
     prompt = _SINGLE_STMT_PROMPT.format(
         statement_label=_STMT_LABELS[statement],
-        field_keys=", ".join(_STMT_FIELDS[statement]),
+        field_keys=_format_field_list(_STMT_FIELDS[statement]),
         document_text=document_text[:150_000],
     )
 
+    logger.info("Sending %s prompt to Claude (doc chars: %d)", statement, len(document_text))
     message = await client.messages.create(
         model="claude-opus-4-5",
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
     raw = message.content[0].text.strip()
+    logger.info("Claude raw response for %s (first 300 chars): %s", statement, raw[:300])
+
+    # Strip markdown code fences if Claude wrapped the JSON (e.g. ```json ... ```)
+    if raw.startswith("```"):
+        raw = raw.split("```", 2)[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+    if raw.endswith("```"):
+        raw = raw[:-3].strip()
 
     try:
-        return json.loads(raw)
+        result = json.loads(raw)
+        non_null = sum(1 for v in result.values() if v.get("value") is not None)
+        logger.info("Claude extracted %d/%d non-null values for %s", non_null, len(result), statement)
+        return result
     except json.JSONDecodeError as e:
         logger.error("Claude returned invalid JSON for %s: %s", statement, raw[:500])
         raise ValueError(f"Claude returned invalid JSON for {statement}: {e}") from e
@@ -129,9 +153,9 @@ async def extract_financials(document_text: str) -> dict:
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     prompt = _EXTRACTION_PROMPT_TEMPLATE.format(
-        is_keys=", ".join(_NON_COMPUTED_IS),
-        bs_keys=", ".join(_NON_COMPUTED_BS),
-        cf_keys=", ".join(_NON_COMPUTED_CF),
+        is_keys=_format_field_list(_NON_COMPUTED_IS),
+        bs_keys=_format_field_list(_NON_COMPUTED_BS),
+        cf_keys=_format_field_list(_NON_COMPUTED_CF),
         document_text=document_text[:150_000],  # safety truncation
     )
 

@@ -19,12 +19,13 @@ services:
     build: ./backend
     ports:
       - "8001:8001"
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-fst_user}:${POSTGRES_PASSWORD:-fst_pass}@postgres:5432/${POSTGRES_DB:-fst_db}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-development-only}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 30
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
