@@ -22,7 +22,12 @@ from app.modules.narrative.router import router as narrative_router
 from app.modules.memo.router import router as memo_router
 from app.modules.portfolio.router import router as portfolio_router
 
-app = FastAPI(title="SpreadSense", version="0.1.0")
+# redirect_slashes=False prevents FastAPI from issuing 307 redirects for
+# trailing-slash mismatches. In production those redirects sent absolute
+# URLs that exposed the Railway backend hostname and broke HTTPS upgrade.
+# Frontend already calls every endpoint with the canonical (trailing-slash)
+# URL, so disabling auto-redirect here is safe.
+app = FastAPI(title="SpreadSense", version="0.1.0", redirect_slashes=False)
 app.include_router(auth_router)
 app.include_router(borrowers_router)
 app.include_router(spreads_router)
