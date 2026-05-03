@@ -1,11 +1,13 @@
 FROM python:3.12-slim
 WORKDIR /app
 
-# Install dependencies first so subsequent code changes don't bust the layer
-COPY pyproject.toml .
+# Build context is the repo root (so Railway / Vercel / Fly can use /Dockerfile or
+# any tool that doesn't run docker-compose). Source files live under backend/.
+# docker-compose.yml sets context: . to match.
+COPY backend/pyproject.toml ./
 RUN pip install --no-cache-dir -e ".[dev]"
 
-COPY . .
+COPY backend/ ./
 
 # Railway / Fly / etc. set $PORT; fall back to 8001 for local docker-compose use
 EXPOSE 8001
