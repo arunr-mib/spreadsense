@@ -89,7 +89,7 @@ export default function SpreadDetailPage() {
         {spread && user && (
           <WorkflowControls
             spread={spread}
-            currentUserId={user.id}
+            currentUserId={user.user_id}
             currentUserRole={user.role}
             onStatusChange={() => qc.invalidateQueries({ queryKey: ['spreads'] })}
           />
