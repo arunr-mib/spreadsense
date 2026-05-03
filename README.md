@@ -1,6 +1,8 @@
-# Financial Spreading Tool
+# SpreadSense
 
-Standalone web application for bank analysts to spread commercial borrower financials using RMA + UCA Cash Flow standards.
+AI-powered financial spreading platform: upload PDF financials → Claude extracts to the RMA template → reviewer confirms → spreads written to a structured grid.
+
+Built for bank credit analysts to compress hours of manual spreading into minutes, with confidence scores on every extracted field so reviewers know exactly what to verify.
 
 ## Stack
 
