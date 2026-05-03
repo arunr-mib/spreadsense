@@ -331,3 +331,74 @@ Implemented as Plan 8 across 9 tasks. Key deviations and refinements from the or
 - **Migration chain**: `down_revision` points to `cadd08808bae` (the credit_memo_meta migration), not `eeddf3d4fbd9` as initially drafted — corrected to avoid a two-head Alembic branch.
 
 Final test counts: 71/71 backend tests passing · TypeScript compiles clean.
+
+---
+
+## Post-Implementation UAT Findings (added 2026-05-03)
+
+Full end-to-end UAT against a real DocuSign 10-K (392k chars, 157 pages, downloaded from SEC EDGAR via Chrome headless) surfaced four real product / infra bugs. All four shipped as fixes on `main` the same day.
+
+### 1. Naive head-of-document truncation lost the financial statements
+
+**Symptom:** Real 10-K uploads returned 0/33 non-null values. Synthetic short PDFs returned 24/33 — the pipeline appeared "working in dev, broken in prod."
+
+**Root cause:** `claude_extractor.py` truncated documents at `[:150_000]` chars before sending to Claude. SEC 10-Ks typically carry 60-90 pages of MD&A and risk factors before the actual statements; on the DocuSign filing the Consolidated Balance Sheet header sat at char 272,077 — well past the cutoff.
+
+**Fix:** Replaced the naive truncation with a `_slice_financial_section()` helper that:
+1. Regex-locates the first `CONSOLIDATED (BALANCE SHEETS?|STATEMENTS? OF (OPERATIONS|INCOME|EARNINGS|CASH FLOWS?))` header.
+2. Returns a 100k-char window starting 2k chars before the match (preface lines included).
+3. Falls back to a 500k-char head truncation only if no header is found (non-10-K documents).
+
+**Result:** 23/33 non-null fields extracted from the same DocuSign 10-K, with HIGH confidence (≥0.85) on most monetary line items. Token cost cut by ~75%.
+
+### 2. Field keys without labels gave Claude no semantic anchor
+
+**Symptom:** Even when Claude received well-formed financial text, it returned all-null with very low confidence (0.0–0.1).
+
+**Root cause:** The prompt sent bare snake_case keys (`net_sales, cost_of_goods_sold, sg_and_a, ...`). Claude could not map document terminology like "Total revenues" or "Cost of revenues" to those opaque keys.
+
+**Fix:** New `_format_field_list()` emits `key (Human Label)` pairs — e.g. `net_sales (Net Sales), cost_of_goods_sold (Cost of Goods Sold)`. Prompt now explicitly instructs: "Use the label to find the matching line item, then return the value under the field_key." Added a 10-K specific hint that "Total revenues" maps to `net_sales`.
+
+### 3. Image-based PDFs failed silently with all-null
+
+**Symptom:** PDFs that had been flattened during e-signing (e.g. some DocuSign-produced PDFs) extracted 0–50 chars of text. Extraction proceeded and returned all-null with 0.1 confidence — indistinguishable to the user from "Claude didn't find anything."
+
+**Fix:** `service.run_extraction` now logs the extracted character count via `logger.warning` after PDF parsing, and fails fast with a clear error (`"PDF text extraction yielded only N chars — file may be image-based or corrupt"`) when the extracted text is under 200 chars. The user sees a meaningful error in the UI's `error` panel state instead of a misleading "ready" with empty values.
+
+### 4. Test infrastructure committed to the production database
+
+**Symptom:** Running `pytest tests/` from inside the backend container wiped the production `fst_db` (every table dropped, including users and spreads). Tests had to be run from a fresh local clone to avoid catastrophic data loss.
+
+**Root causes:** Three separate issues:
+- `conftest.py` pointed at `localhost:5434` (host-machine port) instead of `postgres:5432` (Docker network). Tests inside the container couldn't connect.
+- The "fix" to use `postgres:5432` connected to the **same** database as production. The session-scoped `engine` fixture's `Base.metadata.drop_all()` then wiped the live tables.
+- `service.create_job()` calls `await db.commit()` to release the new job to the background task before the response is sent. In tests this committed the shared session, which downstream tests' `db.rollback()` couldn't undo — surfaced as `UniqueViolationError` on duplicate user emails.
+
+**Fixes:**
+- `TEST_DATABASE_URL` env var with default `postgresql+asyncpg://fst_user:fst_pass@postgres:5432/fst_test_db` (note the `_test_` suffix). A separate Postgres database, created once via `CREATE DATABASE`, that tests are free to drop and recreate.
+- `db` fixture rewritten to use a connection-level transaction with `join_transaction_mode="create_savepoint"`. Application `session.commit()` calls become `RELEASE SAVEPOINT`; the outer transaction is always rolled back at teardown. True per-test isolation even when application code commits.
+
+**Result:** 75/75 tests passing (was 5/78 due to connection failures, then 71/76 after the savepoint fix), no risk of test runs touching production data.
+
+### 5. Logging silently dropped INFO-level events
+
+**Symptom:** No way to see what text was sent to Claude, what Claude returned, or how many fields it extracted.
+
+**Root cause:** `logging.basicConfig(level=logging.INFO)` is a no-op once uvicorn has installed its own root logger handlers — so `logger.info(...)` calls in the ingestion module never reached stdout.
+
+**Fix:** Attach a dedicated `StreamHandler` to `app.modules.ingestion.service` and `app.modules.ingestion.claude_extractor` loggers in `main.py`, with `propagate=False` to avoid duplicate output through uvicorn's root logger. All extraction events now appear in `docker compose logs backend`.
+
+### Production deployment topology
+
+The same UAT cycle drove the first production deployment:
+
+- **Frontend (`spreadsense.vercel.app`)** — Vite static build on Vercel. `vercel.json` declares `framework: "vite"` and adds a single rewrite: `/api/:path*` → Railway backend, so the browser only ever sees `spreadsense.vercel.app` (sidesteps CORS entirely).
+- **Backend (`spreadsense-production.up.railway.app`)** — FastAPI on Railway via Dockerfile. `backend/railway.json` pins `builder: DOCKERFILE` to override Railway's default Railpack auto-detection, which failed to detect this repo. Dockerfile gained a CMD (`alembic upgrade head && uvicorn ... --port ${PORT:-8001}`) so the container can run standalone outside docker-compose.
+- **Database (Neon)** — managed Postgres 16 with the asyncpg-formatted connection string in `DATABASE_URL`. Production migrations run on every container start via the Dockerfile CMD.
+- **CI** — GitHub Actions runs backend pytest (against an ephemeral Postgres service) plus frontend `tsc --noEmit` and `vite build` on every push and PR.
+
+### Remaining known limitations
+
+- 100k-char financial section may still be insufficient for very large filings (some bank holding companies, conglomerates with extensive segment reporting). Bumping `_FIN_SECTION_CHARS` is the trivial mitigation; per-statement smart slicing (separate windows for IS, BS, CF) is the more accurate but more complex follow-up.
+- Image-based PDFs are now rejected with a clear error rather than producing garbage. OCR fallback (pytesseract + poppler) remains an option but not a priority — financial documents are nearly always text-PDF in practice.
+- `extract_financials` (the bulk three-statement extractor) is preserved but unused in the current pipeline. The per-statement `extract_statement` is the only call path the UI exercises.
