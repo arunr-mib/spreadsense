@@ -1,4 +1,4 @@
-# SpreadSense
+# SpreadSense — Financial Spreading Tool
 
 AI-powered financial spreading platform: upload PDF financials → Claude extracts to the RMA template → reviewer confirms → spreads written to a structured grid.
 
