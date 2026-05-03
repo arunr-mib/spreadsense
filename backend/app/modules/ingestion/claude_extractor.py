@@ -4,6 +4,7 @@ Returns: {"IS": {field_key: {"value": float|None, "confidence_score": float}}, "
 """
 import json
 import logging
+import re
 from typing import Literal
 from app.config import settings
 from app.modules.ingestion.rma_template import IS_FIELDS, BS_FIELDS, CF_FIELDS
@@ -42,6 +43,48 @@ Document text:
 
 Return only the JSON object, no markdown, no explanation.
 """
+
+# SEC 10-K filings are typically 300k-500k chars but the actual financial
+# numbers we need live in a ~80k window starting around the "CONSOLIDATED
+# BALANCE SHEETS" header. Sending only that slice is cheaper, faster, and
+# avoids losing the financials to a naive head-of-document truncation.
+_FIN_SECTION_CHARS = 100_000   # how much to send once we find the start
+_FALLBACK_MAX_CHARS = 500_000  # if no header found, send up to this much
+
+# Match common section headers across 10-K and 10-Q filings.
+# Variants: "Statements of Operations", "Statement of Income",
+# "Balance Sheets", "Statements of Cash Flows", etc.
+_FIN_STMT_HEADER = re.compile(
+    r"CONSOLIDATED\s+(BALANCE\s+SHEETS?"
+    r"|STATEMENTS?\s+OF\s+(OPERATIONS|INCOME|EARNINGS|CASH\s+FLOWS?))",
+    re.IGNORECASE,
+)
+
+
+def _slice_financial_section(text: str) -> str:
+    """Return a focused slice covering the financial statements block.
+
+    Locates the first occurrence of a 'Consolidated Balance Sheet / Statement
+    of Operations / Cash Flows' header and returns a generous window starting
+    a bit before it. Falls back to a head-of-document truncation if no header
+    is found (e.g. a non-10-K document).
+    """
+    match = _FIN_STMT_HEADER.search(text)
+    if not match:
+        logger.warning(
+            "No 'Consolidated ...' header found in document; falling back to "
+            "first %d chars (financial statements may not be present)",
+            _FALLBACK_MAX_CHARS,
+        )
+        return text[:_FALLBACK_MAX_CHARS]
+    start = max(0, match.start() - 2_000)
+    end = min(len(text), start + _FIN_SECTION_CHARS)
+    logger.info(
+        "Sliced financial statements block: chars %d-%d (header '%s' at char %d)",
+        start, end, match.group(0).strip(), match.start(),
+    )
+    return text[start:end]
+
 
 _NON_COMPUTED_IS = [(f["key"], f["label"]) for f in IS_FIELDS if not f["computed"]]
 _NON_COMPUTED_BS = [(f["key"], f["label"]) for f in BS_FIELDS if not f["computed"]]
@@ -106,13 +149,17 @@ async def extract_statement(document_text: str, statement: Literal["IS", "BS", "
     import anthropic
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
+    sliced = _slice_financial_section(document_text)
     prompt = _SINGLE_STMT_PROMPT.format(
         statement_label=_STMT_LABELS[statement],
         field_keys=_format_field_list(_STMT_FIELDS[statement]),
-        document_text=document_text[:150_000],
+        document_text=sliced,
     )
 
-    logger.info("Sending %s prompt to Claude (doc chars: %d)", statement, len(document_text))
+    logger.info(
+        "Sending %s prompt to Claude (sliced %d of %d total chars)",
+        statement, len(sliced), len(document_text),
+    )
     message = await client.messages.create(
         model="claude-opus-4-5",
         max_tokens=4096,
@@ -156,7 +203,7 @@ async def extract_financials(document_text: str) -> dict:
         is_keys=_format_field_list(_NON_COMPUTED_IS),
         bs_keys=_format_field_list(_NON_COMPUTED_BS),
         cf_keys=_format_field_list(_NON_COMPUTED_CF),
-        document_text=document_text[:150_000],  # safety truncation
+        document_text=_slice_financial_section(document_text),  # safety truncation
     )
 
     message = await client.messages.create(
