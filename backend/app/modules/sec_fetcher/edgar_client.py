@@ -58,7 +58,13 @@ async def _fetch_submissions(cik_padded: str) -> dict[str, Any]:
 
 
 async def find_latest_filing(cik_padded: str, form: str) -> FilingRef:
-    """Find the most recent filing of the given form (e.g. '10-K' or '10-Q')."""
+    """Find the most recent filing of the given form (e.g. '10-K' or '10-Q').
+
+    Relies on SEC's documented contract that ``filings.recent`` is sorted
+    most-recent-first (descending by filing date). Returns the first matching
+    entry rather than re-sorting by date — this is intentional and matches
+    SEC EDGAR's API behavior.
+    """
     data = await _fetch_submissions(cik_padded)
     recent = data["filings"]["recent"]
     forms = recent["form"]
