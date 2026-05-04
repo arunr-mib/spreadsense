@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadDocument, getExtractionJob, confirmExtraction } from '../api/ingestion'
+import SecFetchControl from './SecFetchControl'
 import type { ExtractionJob, SpreadPeriod } from '../types'
 
 interface Props {
@@ -146,30 +147,34 @@ export default function ExtractionPanel({ spreadId, periods, onConfirmed }: Prop
   // ── IDLE ──
   if (panelState === 'idle' || uploadMut.isPending) {
     return (
-      <div
-        className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-          dragOver ? 'border-[var(--accent)] bg-[var(--bg-page)]' : 'border-[var(--border)] hover:border-[var(--text-secondary)]'
-        }`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
-        onClick={() => !uploadMut.isPending && fileRef.current?.click()}
-      >
-        <input
-          ref={fileRef} type="file" className="hidden"
-          accept=".pdf,.docx,.xlsx"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-        />
-        {uploadMut.isPending ? (
-          <p className="text-sm text-[var(--accent)] animate-pulse">Uploading…</p>
-        ) : (
-          <>
-            <div className="text-4xl mb-3">📄</div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Drop PDF, Word, or Excel file here</p>
-            <p className="text-xs text-[var(--text-secondary)] mt-1">or click to browse · max 50 MB</p>
-          </>
-        )}
-      </div>
+      <>
+        <div
+          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
+            dragOver ? 'border-[var(--accent)] bg-[var(--bg-page)]' : 'border-[var(--border)] hover:border-[var(--text-secondary)]'
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
+          onClick={() => !uploadMut.isPending && fileRef.current?.click()}
+        >
+          <input
+            ref={fileRef} type="file" className="hidden"
+            accept=".pdf,.docx,.xlsx"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+          />
+          {uploadMut.isPending ? (
+            <p className="text-sm text-[var(--accent)] animate-pulse">Uploading…</p>
+          ) : (
+            <>
+              <div className="text-4xl mb-3">📄</div>
+              <p className="text-sm font-medium text-[var(--text-primary)]">Drop PDF, Word, or Excel file here</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">or click to browse · max 50 MB</p>
+            </>
+          )}
+        </div>
+        <div className="my-4 text-center text-xs tracking-widest text-slate-400">— OR —</div>
+        <SecFetchControl />
+      </>
     )
   }
 
