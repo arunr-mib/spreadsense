@@ -56,6 +56,16 @@ export default function ExtractionPanel({ spreadId, periods, onConfirmed }: Prop
   const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(periods[0]?.id ?? null)
   const [overrides, setOverrides] = useState<Record<string, number>>({})
 
+  // Auto-select the first period when one becomes available later — covers the
+  // common case of mounting the panel before the analyst has created a period.
+  // Without this, the dropdown visually shows "FY 2025" (browser default first
+  // option) but selectedPeriodId stays null, leaving Confirm permanently disabled.
+  useEffect(() => {
+    if (selectedPeriodId === null && periods.length > 0) {
+      setSelectedPeriodId(periods[0].id)
+    }
+  }, [periods, selectedPeriodId])
+
   // Upload mutation
   const uploadMut = useMutation({
     mutationFn: (file: File) => uploadDocument(spreadId, file),
