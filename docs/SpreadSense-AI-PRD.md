@@ -1,6 +1,6 @@
 # SpreadSense AI — Product Requirements Document
 
-**Document Status:** Draft v1.2 — First production deployment
+**Document Status:** Draft v1.3 — May 2026
 **Date:** May 3, 2026 (originally April 21, 2026)
 **Owner:** Arun Rajendiran
 **Reviewers:** Credit Technology, Risk Management, Engineering
@@ -588,6 +588,7 @@ All endpoints follow RESTful conventions. Key routes:
 - [x] **Image-based PDF guard** — Fast-fails with a clear error when PyMuPDF extracts <200 chars, instead of silently returning all-null
 - [x] **Test infrastructure hardening** — Dedicated test database, savepoint-based isolation so application commits don't pollute the test transaction (75/75 tests passing)
 - [x] **CI on every push** — GitHub Actions runs backend pytest (with ephemeral Postgres) plus frontend `tsc --noEmit` and production build
+- [x] SEC EDGAR fetcher: pull latest 10-K / 10-Q for any public ticker directly inside ExtractionPanel.
 - [ ] AI call logging + audit table
 - [ ] User management admin panel
 - [ ] Performance testing (50 concurrent users)

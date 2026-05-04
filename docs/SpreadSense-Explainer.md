@@ -35,6 +35,15 @@ That's it. What used to take 4 hours takes 4 minutes.
 ### Step 1: Upload
 You drag the borrower's annual report PDF into a panel on screen. The system accepts it immediately and starts processing in the background — you don't sit and wait for a single big "Submit" button.
 
+### Pulling a 10-K straight from SEC
+
+If the borrower is a public US company, you don't need to download the
+filing yourself. In the spread page, type the ticker (e.g. `msft`), pick
+10-K or 10-Q, and click **Fetch latest 10K/Q**. SpreadSense pulls the
+latest filing from SEC EDGAR, renders it to PDF (10–30 seconds for a
+typical 10-K), and downloads it to your machine. Then upload it through
+the regular flow.
+
 ### Step 2: Watch the progress bar
 A progress strip walks through five phases live:
 - **Uploading** the file

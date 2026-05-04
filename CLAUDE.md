@@ -25,7 +25,7 @@ See `docs/Deployment-Runbook.md` for env vars, failure modes, and runbooks.
 
 ## Documentation Map
 
-- `docs/SpreadSense-AI-PRD.md` — product requirements (v1.2, May 2026)
+- `docs/SpreadSense-AI-PRD.md` — product requirements (v1.3, May 2026)
 - `docs/SpreadSense-Explainer.md` — plain-English overview for non-technical readers
 - `docs/Deployment-Runbook.md` — production deployment + ops
 - `docs/superpowers/specs/` — design specs (extraction-upload-confidence is current)
@@ -86,10 +86,9 @@ python3 scripts/fetch_10k_pdf.py msft   # → /tmp/sec_10k.pdf
 
 ## Open Threads / Ideas
 
-- **SEC fetcher as a UI feature** (proposed by user): expose
-  `scripts/fetch_10k_pdf.py` inside SpreadSense — paste a ticker, system pulls
-  the latest 10-K from SEC EDGAR and feeds it into the extraction pipeline.
-  Not yet scoped or planned.
+- ✅ **SEC fetcher** — shipped May 2026. `GET /sec/fetch` endpoint + `SecFetchControl`
+  in ExtractionPanel. Spec: `docs/superpowers/specs/2026-05-03-sec-fetcher-design.md`.
+  Plan: `docs/superpowers/plans/2026-05-03-sec-fetcher.md`.
 - Test additional 10-Ks beyond DocuSign + Microsoft.
 - Phase 5: Supabase Auth, S3 file persistence, batch upload, multi-tenant.
 

@@ -102,6 +102,16 @@ If standing up a fresh environment (e.g. moving to a new account or staging clon
 
 ---
 
+## Endpoints
+
+- `GET /sec/fetch?ticker=&form=10-K|10-Q` — auth-required. Resolves ticker via
+  SEC's `company_tickers.json`, fetches the latest matching filing, and renders
+  it to PDF using WeasyPrint. Streams the result back as `application/pdf` with
+  `Content-Disposition: attachment` and `X-PDF-Pages` header. No new env vars.
+  SEC traffic uses User-Agent `SpreadSense (contact@adamsmind.ai)`.
+
+---
+
 ## Common Failure Modes & Fixes
 
 ### "Application not found" (HTTP 404 from Railway URL)
@@ -126,6 +136,15 @@ Railway is using its Railpack auto-detector instead of your Dockerfile.
 ### Build failure: pip install fails
 
 Usually a transient network blip on Railway. **Retry the deploy** from the Deployments tab. If it persists, check if `pyproject.toml` references a package that needs a system library not in `python:3.12-slim` — install via apt in the Dockerfile.
+
+### WeasyPrint native libs
+
+The backend image must include libpango, libcairo, libgdk-pixbuf, libffi8,
+libglib, fontconfig, and a font package (we use `fonts-dejavu-core`). These
+were added to `backend/Dockerfile` for the SEC fetcher — if you're rebuilding
+from a fork or older base image, ensure the `apt-get install` layer is
+preserved or PDF rendering will fail at import time with
+`OSError: cannot load library 'libgobject-2.0-0'`.
 
 ### Runtime crash: "alembic.util.exc.CommandError" or "relation does not exist"
 
