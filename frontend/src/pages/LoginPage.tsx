@@ -56,18 +56,19 @@ export default function LoginPage() {
         }`}
       >
         <div className="max-w-[1400px] mx-auto px-8 py-5 flex items-center justify-between">
-          {/* Wordmark */}
-          <a href="/" className="flex items-center gap-1.5 -tracking-[0.01em]">
-            <span className="text-[19px] font-semibold lowercase">spreadsense</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M5 19L19 5M19 5H8M19 5V16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          {/* Wordmark — stacked-sheets logo + branded wordmark with color split */}
+          <a
+            href="/"
+            className="flex items-center gap-2.5 group"
+            aria-label="SpreadSense home"
+          >
+            <SpreadSenseLogo />
+            <span className="text-[24px] font-extrabold tracking-[-0.025em] leading-none">
+              <span className={scrolled ? 'text-slate-900' : 'text-white'}>
+                Spread
+              </span>
+              <span className="text-blue-400">Sense</span>
+            </span>
           </a>
 
           {/* Center nav */}
@@ -153,9 +154,9 @@ export default function LoginPage() {
               </div>
             </Reveal>
 
-            {/* Spreading-first headline */}
+            {/* Spreading-first headline (~30% smaller per design tweak) */}
             <Reveal delay={80}>
-              <h1 className="text-[44px] sm:text-[56px] lg:text-[80px] font-bold tracking-[-0.025em] leading-[0.98] mb-7">
+              <h1 className="text-[32px] sm:text-[40px] lg:text-[56px] font-bold tracking-[-0.025em] leading-[1.02] mb-6">
                 Spread a 10-K
                 <br />
                 in 3 minutes.
@@ -166,7 +167,7 @@ export default function LoginPage() {
 
             {/* Subtitle calls out spreading explicitly */}
             <Reveal delay={160}>
-              <p className="text-[17px] lg:text-[19px] text-white/75 leading-relaxed mb-9 max-w-xl">
+              <p className="text-[15px] lg:text-[17px] text-white/75 leading-relaxed mb-8 max-w-xl">
                 AI-native financial spreading for commercial credit analysts.
                 Read borrower 10-Ks, audited financials, and trial balances
                 end-to-end — statements, footnotes, MD&amp;A — and walk into
@@ -628,6 +629,52 @@ export default function LoginPage() {
 }
 
 /* ─────────────── Sub-components ─────────────── */
+
+/**
+ * Logo: two stacked sheets (front sheet has data lines) — visualises the
+ * core "spreading" action. Sheets in white with a blue gradient backdrop
+ * box, data lines in the brand blue. Scales cleanly at any size.
+ */
+function SpreadSenseLogo({ size = 32 }: { size?: number }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-lg shadow-md shadow-blue-900/20"
+      style={{
+        width: size,
+        height: size,
+        background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)',
+      }}
+    >
+      <svg
+        width={size * 0.62}
+        height={size * 0.62}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden
+      >
+        {/* Back sheet (slightly offset, semi-transparent) */}
+        <rect
+          x="3"
+          y="3"
+          width="13"
+          height="17"
+          rx="2"
+          fill="white"
+          fillOpacity="0.55"
+        />
+        {/* Front sheet */}
+        <rect x="6.5" y="5" width="13" height="17" rx="2" fill="white" />
+        {/* Data lines on the front sheet */}
+        <path
+          d="M9.5 10h7M9.5 13.5h7M9.5 17h4"
+          stroke="#1e40af"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  )
+}
 
 /**
  * Stylised mockup of the spread page used in the hero. Built in HTML/CSS
