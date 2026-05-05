@@ -72,7 +72,7 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 leading-tight mb-4">
-            Spread a 10-K in{' '}
+            Spread a financial doc in{' '}
             <span className="text-indigo-600">3 minutes</span>,
             <br className="hidden sm:inline" />
             not 3 hours.
