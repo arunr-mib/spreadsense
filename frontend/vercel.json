@@ -9,6 +9,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://spreadsense-production.up.railway.app/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
