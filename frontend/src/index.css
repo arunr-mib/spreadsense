@@ -47,13 +47,14 @@
   --accent-border: #cbd5e1;     /* slate-300 */
   --text-on-accent: #ffffff;
 
-  /* Highlight — electric lime, the high-energy "demo" CTA color
-   * (matches Ramp's signature green). Use sparingly: hero CTA, AI
-   * feature actions, "Explain changes" / "Ask the filing" buttons. */
-  --highlight: #d9fb50;
-  --highlight-hover: #c5e83d;
-  --highlight-soft: #f4ffce;
-  --text-on-highlight: #0f172a;
+  /* Highlight — electric blue for the high-energy "demo" CTA + AI
+   * feature emphasis. Banking-appropriate replacement for Ramp's
+   * signature lime. Vivid enough to pop on dark hero, refined enough
+   * to live alongside slate primaries. */
+  --highlight: #3b82f6;          /* blue-500 — vivid, professional */
+  --highlight-hover: #2563eb;    /* blue-600 */
+  --highlight-soft: #dbeafe;     /* blue-100 */
+  --text-on-highlight: #ffffff;
 
   /* Hero gradient anchors */
   --hero-top: #060912;          /* near-black */
