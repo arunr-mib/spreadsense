@@ -31,8 +31,11 @@ VALID_CATEGORIES = {
     "watch",
 }
 
-# Sonnet for speed: 3-4s vs 8-10s on Opus, indistinguishable quality for
-# structured-narrative-from-numbers. Extractor stays on Opus.
+# Sonnet 4.5 was tested and produced excellent credit-narrative quality
+# (DSO expansion, interest coverage delta, quality-of-earnings flags) at
+# ~10-12s latency on a 30-line-item prompt. Opus adds 5s with no
+# observable quality lift; Haiku risks losing the skeptical-analyst
+# voice on multi-step ratio reasoning. Extractor stays on Opus.
 MODEL_NAME = "claude-sonnet-4-5"
 
 

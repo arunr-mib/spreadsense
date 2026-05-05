@@ -87,7 +87,7 @@ export default function VarianceCommentary({ spreadId }: Props) {
 
       {mutation.isPending && (
         <div className="text-sm text-indigo-700">
-          Analyzing {periodCount(analytics)} periods… this takes ~5 seconds.
+          Analyzing {periodCount(analytics)} periods… typically 10–15 seconds.
         </div>
       )}
 
