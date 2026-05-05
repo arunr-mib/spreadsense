@@ -119,29 +119,29 @@ export default function LoginPage() {
       </nav>
 
       {/* ─── HERO (Ramp-style: dark gradient → fades to white) ─── */}
-      <section className="relative overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40">
-        {/* Backdrop: deep navy throughout, fades to white only in the
-            last ~15% so the white text on the headline stays visible
-            against dark across the whole hero copy column. */}
+      <section
+        className="relative isolate overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40"
+        style={{
+          /* Gradient lives directly on the section so it can't be hidden
+             behind the body's bg color. Stays deep navy across most of
+             the hero so the white headline text always has contrast,
+             then fades to white only in the last ~12% to transition
+             smoothly into the next (light) section. */
+          background:
+            'linear-gradient(180deg, #060912 0%, #0a1230 30%, #0a1230 70%, #1e3a8a 88%, #ffffff 100%)',
+        }}
+      >
+        {/* Subtle radial highlight on top */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10"
-          style={{
-            background:
-              'linear-gradient(180deg, #060912 0%, #0a1230 30%, #0a1230 70%, #1e3a8a 88%, #ffffff 100%)',
-          }}
-        />
-        {/* Subtle radial highlight */}
-        <div
-          aria-hidden
-          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1100px] h-[700px] -z-10 opacity-60 blur-3xl"
+          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1100px] h-[700px] z-0 opacity-60 blur-3xl pointer-events-none"
           style={{
             background:
               'radial-gradient(ellipse, rgba(59,130,246,0.25) 0%, rgba(96,165,250,0.18) 35%, transparent 70%)',
           }}
         />
 
-        <div className="max-w-[1400px] mx-auto px-8 grid lg:grid-cols-12 gap-12 items-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-8 grid lg:grid-cols-12 gap-12 items-center">
           {/* Left column: copy */}
           <div className="lg:col-span-6 text-white">
             {/* Trust kicker (Ramp uses G2 stars; we cite live validation) */}
@@ -220,7 +220,7 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom line under hero (Ramp pattern: "X teams have saved hours") */}
-        <div className="max-w-[1400px] mx-auto px-8 mt-20 lg:mt-24 text-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-8 mt-20 lg:mt-24 text-center">
           <Reveal delay={400}>
             <p className="text-[14px] text-slate-700">
               <strong className="text-slate-900">100% AI extraction accuracy on validated filings.</strong>{' '}
