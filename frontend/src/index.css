@@ -39,12 +39,26 @@
   --text-tertiary: #94a3b8;     /* slate-400 */
   --text-on-dark: #f1f5f9;      /* slate-100 — for text on slate-900 strip */
 
-  /* Accent — banking navy */
-  --accent: #1e40af;            /* blue-800 */
-  --accent-hover: #1e3a8a;      /* blue-900 */
-  --accent-soft: #dbeafe;       /* blue-100 */
-  --accent-bg: #eff6ff;         /* blue-50 */
-  --accent-border: #93c5fd;     /* blue-300 */
+  /* Accent — institutional black for primary actions (Ramp-style) */
+  --accent: #0f172a;            /* slate-900 — primary buttons + serious CTAs */
+  --accent-hover: #1e293b;      /* slate-800 */
+  --accent-soft: #f1f5f9;       /* slate-100 — pale wash for selected pills */
+  --accent-bg: #f8fafc;         /* slate-50 */
+  --accent-border: #cbd5e1;     /* slate-300 */
+  --text-on-accent: #ffffff;
+
+  /* Highlight — electric lime, the high-energy "demo" CTA color
+   * (matches Ramp's signature green). Use sparingly: hero CTA, AI
+   * feature actions, "Explain changes" / "Ask the filing" buttons. */
+  --highlight: #d9fb50;
+  --highlight-hover: #c5e83d;
+  --highlight-soft: #f4ffce;
+  --text-on-highlight: #0f172a;
+
+  /* Hero gradient anchors */
+  --hero-top: #060912;          /* near-black */
+  --hero-mid: #0a1230;          /* deep navy */
+  --hero-bottom: #ffffff;
 
   /* Borders */
   --border: #e2e8f0;            /* slate-200 */
