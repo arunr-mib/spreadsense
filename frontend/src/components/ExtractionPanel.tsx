@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadDocument, getExtractionJob, confirmExtraction } from '../api/ingestion'
 import SecFetchControl from './SecFetchControl'
+import QuickBooksConnect from './QuickBooksConnect'
 import type { ExtractionJob, SpreadPeriod } from '../types'
 
 interface Props {
@@ -174,6 +175,12 @@ export default function ExtractionPanel({ spreadId, periods, onConfirmed }: Prop
         </div>
         <div className="my-4 text-center text-xs tracking-widest text-slate-400">— OR —</div>
         <SecFetchControl />
+        <div className="my-4 text-center text-xs tracking-widest text-slate-400">— OR —</div>
+        <QuickBooksConnect
+          spreadId={spreadId}
+          periods={periods}
+          onImported={onConfirmed}
+        />
       </>
     )
   }
