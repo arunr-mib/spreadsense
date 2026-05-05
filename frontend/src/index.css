@@ -1,23 +1,88 @@
 @import "tailwindcss";
 
+/* Modern banking design system — slate + navy + crisp white.
+ * Reference: dovetail.com (refined institutional product feel).
+ *
+ * Bg layers:
+ *   --bg-page     subtle off-white that sits behind everything
+ *   --bg-card     pure white for elevated surfaces (cards, modals)
+ *   --bg-muted    soft gray for hover/inactive states
+ *   --bg-strip    deep navy used in header strips and KPI bars
+ *
+ * Text layers:
+ *   --text-primary    near-black for headlines and dense data
+ *   --text-secondary  slate-500 for labels and supporting copy
+ *   --text-tertiary   slate-400 for hints and disabled states
+ *
+ * Accent (the bank's "primary action" color):
+ *   --accent          deep navy blue — the institutional move,
+ *                     resists feeling like a consumer-tech indigo
+ *   --accent-hover    one stop darker for button hover
+ *   --accent-soft     pale wash for selected pills, focus rings
+ *
+ * Status:
+ *   --pass            emerald-600 (covenant met, confidence high)
+ *   --breach          rose-600 (covenant breach, error state)
+ *   --near            amber-600 (caution, near-threshold, MED confidence)
+ */
 :root {
-  --bg-page: #f5f0e8;
-  --bg-card: #ede5d5;
-  --bg-strip: #292218;
-  --accent: #d97706;
-  --text-primary: #1c1409;
-  --text-secondary: #92805a;
-  --border: #ddd5c0;
-  --pass: #16a34a;
-  --breach: #dc2626;
-  --near: #f59e0b;
+  /* Surfaces */
+  --bg-page: #f8fafc;          /* slate-50 */
+  --bg-card: #ffffff;
+  --bg-muted: #f1f5f9;          /* slate-100 */
+  --bg-strip: #0f172a;          /* slate-900 — for the dark KPI bar */
+  --bg-strip-subtle: #1e293b;   /* slate-800 — secondary dark surface */
+
+  /* Text */
+  --text-primary: #0f172a;      /* slate-900 */
+  --text-secondary: #475569;    /* slate-600 */
+  --text-tertiary: #94a3b8;     /* slate-400 */
+  --text-on-dark: #f1f5f9;      /* slate-100 — for text on slate-900 strip */
+
+  /* Accent — banking navy */
+  --accent: #1e40af;            /* blue-800 */
+  --accent-hover: #1e3a8a;      /* blue-900 */
+  --accent-soft: #dbeafe;       /* blue-100 */
+  --accent-bg: #eff6ff;         /* blue-50 */
+  --accent-border: #93c5fd;     /* blue-300 */
+
+  /* Borders */
+  --border: #e2e8f0;            /* slate-200 */
+  --border-strong: #cbd5e1;     /* slate-300 */
+
+  /* Status */
+  --pass: #059669;              /* emerald-600 */
+  --pass-bg: #ecfdf5;           /* emerald-50 */
+  --breach: #dc2626;            /* rose-600 */
+  --breach-bg: #fef2f2;         /* rose-50 */
+  --near: #d97706;              /* amber-600 */
+  --near-bg: #fffbeb;           /* amber-50 */
+
+  /* Type */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter alt forms */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   margin: 0;
   background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Tighter rendering for dense data tables on spread page */
+table {
+  font-feature-settings: 'tnum'; /* tabular numerals */
 }
