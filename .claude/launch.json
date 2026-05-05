@@ -6,7 +6,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5174"],
       "port": 5174,
-      "cwd": "/Users/arun/Documents/projects/financial-spreading-tool/frontend"
+      "cwd": "/Users/arun/Documents/projects/financial-spreading-tool/.worktrees/feature/plan-5-workflow/frontend"
     }
   ]
 }

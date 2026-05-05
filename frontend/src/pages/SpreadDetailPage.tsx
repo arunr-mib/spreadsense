@@ -9,6 +9,7 @@ import SpreadingGrid from '../components/SpreadingGrid'
 import ExtractionPanel from '../components/ExtractionPanel'
 import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
+import VarianceCommentary from '../components/VarianceCommentary'
 import NarrativeSection from '../components/NarrativeSection'
 import MemoSection from '../components/MemoSection'
 import WorkflowControls from '../components/WorkflowControls'
@@ -224,7 +225,12 @@ export default function SpreadDetailPage() {
         )}
 
         {/* ── KPI SECTION ── */}
-        {activeSection === 'kpis' && <KpiSection spreadId={spreadId} />}
+        {activeSection === 'kpis' && (
+          <>
+            <VarianceCommentary spreadId={spreadId} />
+            <KpiSection spreadId={spreadId} />
+          </>
+        )}
 
         {/* ── NARRATIVE SECTION ── */}
         {activeSection === 'narrative' && <NarrativeSection spreadId={spreadId} />}

@@ -22,6 +22,7 @@ from app.modules.narrative.router import router as narrative_router
 from app.modules.memo.router import router as memo_router
 from app.modules.portfolio.router import router as portfolio_router
 from app.modules.sec_fetcher.router import router as sec_fetcher_router
+from app.modules.variance_commentary.router import router as variance_commentary_router
 
 # redirect_slashes=False prevents FastAPI from issuing 307 redirects for
 # trailing-slash mismatches. In production those redirects sent absolute
@@ -39,6 +40,7 @@ app.include_router(narrative_router)
 app.include_router(memo_router)
 app.include_router(portfolio_router)
 app.include_router(sec_fetcher_router)
+app.include_router(variance_commentary_router)
 
 
 @app.get("/health")
