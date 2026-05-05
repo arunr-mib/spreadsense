@@ -10,6 +10,7 @@ import ExtractionPanel from '../components/ExtractionPanel'
 import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
 import VarianceCommentary from '../components/VarianceCommentary'
+import AskFiling from '../components/AskFiling'
 import NarrativeSection from '../components/NarrativeSection'
 import MemoSection from '../components/MemoSection'
 import WorkflowControls from '../components/WorkflowControls'
@@ -228,6 +229,7 @@ export default function SpreadDetailPage() {
         {activeSection === 'kpis' && (
           <>
             <VarianceCommentary spreadId={spreadId} />
+            <AskFiling spreadId={spreadId} />
             <KpiSection spreadId={spreadId} />
           </>
         )}

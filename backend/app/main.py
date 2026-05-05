@@ -24,6 +24,7 @@ from app.modules.portfolio.router import router as portfolio_router
 from app.modules.sec_fetcher.router import router as sec_fetcher_router
 from app.modules.variance_commentary.router import router as variance_commentary_router
 from app.modules.quickbooks_stub.router import router as quickbooks_router
+from app.modules.ask_filing.router import router as ask_filing_router
 
 # redirect_slashes=False prevents FastAPI from issuing 307 redirects for
 # trailing-slash mismatches. In production those redirects sent absolute
@@ -43,6 +44,7 @@ app.include_router(portfolio_router)
 app.include_router(sec_fetcher_router)
 app.include_router(variance_commentary_router)
 app.include_router(quickbooks_router)
+app.include_router(ask_filing_router)
 
 
 @app.get("/health")

@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 from typing import Optional, Any
-from sqlalchemy import String, ForeignKey, DateTime, Enum as SAEnum, JSON
+from sqlalchemy import String, Text, ForeignKey, DateTime, Enum as SAEnum, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
@@ -25,6 +25,7 @@ class ExtractionJob(Base):
     )
     phase: Mapped[str] = mapped_column(String(32), nullable=False, default="uploading")
     results: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

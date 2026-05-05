@@ -80,6 +80,10 @@ async def run_extraction(job_id: int, file_bytes: bytes) -> None:
             cf_fields = await _claude_extractor.extract_statement(text, "CF")
 
             job.results = {"IS": is_fields, "BS": bs_fields, "CF": cf_fields}
+            # Persist text so Ask-the-Filing can answer free-text questions
+            # against the same document later. Cap at ~2MB worth (most 10-Ks
+            # land at 300-500K chars; 2M is room for huge audited files).
+            job.extracted_text = text[:2_000_000]
             job.status = ExtractionStatus.ready
             job.phase = "ready"
             await session.commit()
