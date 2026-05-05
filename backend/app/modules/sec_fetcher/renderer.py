@@ -10,7 +10,10 @@ logger = logging.getLogger(__name__)
 
 USER_AGENT = "SpreadSense (contact@adamsmind.ai)"
 HTML_FETCH_TIMEOUT = 30.0
-RENDER_TIMEOUT_SECONDS = 60.0
+# 10-K filings can run 100+ pages. Empirically: AAPL 10-Q (~30pp) renders in ~16s
+# on Railway, and MSFT 10-K (~137pp) overran the previous 60s cap. 180s gives
+# headroom for the largest filings without holding workers indefinitely.
+RENDER_TIMEOUT_SECONDS = 180.0
 
 
 async def render_html_url_to_pdf(url: str) -> bytes:
