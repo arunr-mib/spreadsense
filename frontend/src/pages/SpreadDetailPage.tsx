@@ -11,6 +11,7 @@ import RatioStrip from '../components/RatioStrip'
 import KpiSection from '../components/KpiSection'
 import VarianceCommentary from '../components/VarianceCommentary'
 import AskFiling from '../components/AskFiling'
+import { downloadSpreadXlsx } from '../api/excelExport'
 import NarrativeSection from '../components/NarrativeSection'
 import MemoSection from '../components/MemoSection'
 import WorkflowControls from '../components/WorkflowControls'
@@ -88,6 +89,22 @@ export default function SpreadDetailPage() {
           <h1 className="text-lg font-semibold text-[var(--text-primary)]">{spread?.deal_name ?? 'Spread'}</h1>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5">Spread #{spreadId}</p>
         </div>
+        {spread && (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await downloadSpreadXlsx(spreadId)
+              } catch (err) {
+                alert((err as Error).message)
+              }
+            }}
+            className="px-3 py-1.5 text-xs font-medium bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-page)]"
+            title="Download spread as Excel"
+          >
+            ⬇ Export Excel
+          </button>
+        )}
         {spread && user && (
           <WorkflowControls
             spread={spread}
