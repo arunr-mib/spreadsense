@@ -1,7 +1,8 @@
 # SpreadSense AI — Product Requirements Document
 
-**Document Status:** Draft v1.3 — May 2026
-**Date:** May 3, 2026 (originally April 21, 2026)
+**Document Status:** Draft v1.4 — May 5, 2026
+**Date:** May 5, 2026 (originally April 21, 2026)
+**v1.4 changelog:** Adds AI variance commentary, Ask-the-Filing free-text Q&A, QuickBooks Online connector (demo stub for v1; real OAuth in v2), Excel export, and Reopen workflow transition. All five shipped to production prior to credit-leadership review.
 **Owner:** Arun Rajendiran
 **Reviewers:** Credit Technology, Risk Management, Engineering
 **Confidentiality:** Internal — Not for Distribution
@@ -262,6 +263,45 @@ This enables a human-in-the-loop workflow where AI performs the mechanical extra
 | F-34 | Authentication shall use JWT-based sessions | P0 |
 | F-35 | Analysts shall only see their own spreads; sr_analysts and admins see all | P0 |
 | F-36 | Admin role shall manage user accounts and role assignments | P1 |
+| F-36a | Workflow shall support a `completed → draft` (Reopen) transition for the owning analyst (to fix their own work) and reviewers (to send back for changes) | P0 — shipped May 5, 2026 |
+
+### 7.9 Variance Commentary (AI)
+
+| Req ID | Requirement | Priority |
+|--------|-------------|----------|
+| F-37 | When a spread has at least two periods with line-item data, system shall offer a "Explain changes" action that returns AI-generated variance commentary | P0 — shipped May 5, 2026 |
+| F-38 | Commentary shall be returned as 4–6 structured bullets, each tagged with a category (revenue / margins / liquidity / leverage / working_capital / watch) | P0 |
+| F-39 | The final bullet shall always carry the `watch` category and identify a forward-looking credit-risk concern for the next reporting period | P0 |
+| F-40 | Commentary shall be regeneratable with a single click; results are stateless and not persisted | P1 |
+| F-41 | If fewer than two periods have line-item data, the UI shall surface "add a second fiscal year period" guidance instead of the action | P0 |
+
+### 7.10 Ask-the-Filing (AI Q&A)
+
+| Req ID | Requirement | Priority |
+|--------|-------------|----------|
+| F-42 | System shall persist the full extracted plain-text of every confirmed extraction (column `extraction_jobs.extracted_text`, capped at 2 MB) for downstream Q&A use | P0 — shipped May 5, 2026 |
+| F-43 | System shall provide a per-spread free-text Q&A endpoint that answers questions strictly grounded in the most-recent extracted document for that spread | P0 |
+| F-44 | Each answer shall include a "source hint" identifying the section of the source document that supports it (e.g. "Item 1A — Risk Factors", "Note 8 — Debt"); when not locatable, the system shall say so explicitly | P0 |
+| F-45 | The model shall refuse to answer questions that cannot be supported from the extracted text; it shall not draw on external or pretrained knowledge for borrower-specific facts | P0 |
+| F-46 | UI shall offer 4 default suggested questions tuned for credit analysis (risk factors, debt maturity, related-party transactions, MD&A liquidity) | P0 |
+
+### 7.11 Direct Accounting-System Connector — QuickBooks Online (v1: stub)
+
+| Req ID | Requirement | Priority |
+|--------|-------------|----------|
+| F-47 | System shall offer a "Connect QuickBooks" path inside ExtractionPanel as a third ingestion option alongside PDF upload and SEC fetcher | P0 — stub shipped May 5, 2026 |
+| F-48 | v1 stub shall write a fixed, realistic SMB trial balance (27 line items spanning IS / BS / CF) for an "Acme Manufacturing (Demo Sandbox)" entity into the analyst's chosen period | P0 — v1 only |
+| F-49 | Imported line items shall be tagged with `source = "quickbooks"` and `confidence_score = 1.0` to distinguish them from PDF-extracted values | P0 |
+| F-50 | v2 (target Q3 2026) shall replace the stub with real Intuit OAuth 2.0, sandbox + production app registration, refresh-token storage, and Chart-of-Accounts → RMA-template mapping. Router contract (`POST /quickbooks/spreads/{id}/periods/{p}/import`) is stable across the migration. | P1 — v2 |
+
+### 7.12 Excel Export
+
+| Req ID | Requirement | Priority |
+|--------|-------------|----------|
+| F-51 | System shall provide a per-spread Excel export endpoint that returns a valid `.xlsx` workbook with one sheet per statement (IS / BS / CF) | P0 — shipped May 5, 2026 |
+| F-52 | Each sheet shall render fiscal-year columns side-by-side, accounting number format, total-row highlighting, and a banner with borrower + deal name | P0 |
+| F-53 | Filename shall encode borrower and spread ID (e.g. `UAT_Docusign2_Inc_Spread_1.xlsx`) | P0 |
+| F-54 | Bank-branded layout (logo, footer, formula cells) is deferred to v2 | P1 — v2 |
 
 ---
 
@@ -589,6 +629,11 @@ All endpoints follow RESTful conventions. Key routes:
 - [x] **Test infrastructure hardening** — Dedicated test database, savepoint-based isolation so application commits don't pollute the test transaction (75/75 tests passing)
 - [x] **CI on every push** — GitHub Actions runs backend pytest (with ephemeral Postgres) plus frontend `tsc --noEmit` and production build
 - [x] SEC EDGAR fetcher: pull latest 10-K / 10-Q for any public ticker directly inside ExtractionPanel.
+- [x] **AI variance commentary** (May 5, 2026) — `POST /spreads/{id}/variance-commentary` endpoint and Analytics-tab card. Claude Sonnet 4.5 reads two periods of structured line items + ratios, returns 4–6 categorized bullets (revenue / margins / liquidity / leverage / working_capital / watch) ending with a forward-looking credit-risk watchpoint. ~10–15s end-to-end.
+- [x] **Ask-the-Filing** (May 5, 2026) — `POST /spreads/{id}/ask` endpoint and Q&A card on the KPIs tab. Persists the full extracted document text on `extraction_jobs` (migration 0002), then answers free-text questions with a source-section hint (e.g. "Item 1A — Risk Factors", "Note 8 — Debt"). Strictly grounded — refuses to answer outside the document.
+- [x] **QuickBooks Online connector — demo stub** (May 5, 2026) — `POST /quickbooks/spreads/{spread_id}/periods/{period_id}/import` writes a fixed 27-line trial balance for an "Acme Manufacturing (Demo Sandbox)" entity to demonstrate the direct-accounting-system pattern. Real OAuth + token store + COA mapping is v2 (target Q3 2026); router contract is stable.
+- [x] **Excel export** (May 5, 2026) — `GET /spreads/{id}/export.xlsx` returns an `.xlsx` workbook with one sheet per statement (IS / BS / CF), period columns side-by-side, indigo header band, total-row highlighting, and accounting number format. openpyxl backend; banner with borrower + deal name. Bank-branded layout deferred.
+- [x] **Reopen workflow transition** (May 5, 2026) — `completed → draft` allowed for owner-analyst, sr_credit_analyst, admin. Frontend renders Reopen as a secondary button alongside the primary forward action. State-machine forward-only assumption removed; reviewer-rejection use case now supported.
 - [ ] AI call logging + audit table
 - [ ] User management admin panel
 - [ ] Performance testing (50 concurrent users)

@@ -66,6 +66,27 @@ The whole table is sorted with red rows on top, so you focus your attention exac
 ### Step 4: Confirm
 One click writes everything — both your manual entries and the AI's extracted values — into the actual spread grid. Subtotals (gross profit, EBITDA, total assets, etc.) compute automatically. Ratios (debt service coverage, leverage, liquidity) are now ready for the credit memo.
 
+### Skip the PDF entirely — pull from QuickBooks
+
+For private SMB borrowers, most financials never live in a PDF. They live in the borrower's accounting software. SpreadSense offers a third upload option: **Connect QuickBooks**. Click it, the system pretends to authenticate (today: stubbed; v2 ships real Intuit OAuth), pick the period, and the trial balance flows in directly — no OCR, no review queue, no PDF round trip. This is how nCino and Validis-style products handle SMB lending; SpreadSense's lane is to add AI reasoning on top.
+
+### After the spread is built — three new AI moves
+
+Once your spread has at least two periods of data, two AI tools light up on the **Analytics tab**:
+
+**1. Variance Commentary.** Click `✨ Explain changes`. In about 12 seconds, Claude returns 4–6 categorized bullets identifying the most material period-over-period changes — quantified, skeptical, and ending with a forward-looking "Watch:" bullet on what could matter next quarter. Sample output on a stressed borrower:
+
+> - Net sales fell 9.3% YoY ($3.22B → $2.92B), while net income collapsed 51.5% — operating leverage deterioration.
+> - AR rose 18.5% on falling revenue; DSO 58 → 76 days, suggesting collection issues or aggressive recognition.
+> - Interest coverage dropped from 158x to 6.4x — new long-term debt of ~$298M and equity destruction of $463M materially weakened the balance sheet.
+> - **Watch:** if AR continues growing faster than sales or working capital absorbs more cash, expect covenant pressure or liquidity stress.
+
+That's a junior analyst's first credit memo pass — done in 12 seconds.
+
+**2. Ask the Filing.** A free-text Q&A box right under the variance card. Type any question about the borrower's filing — risk factors, debt maturity schedule, related-party transactions, MD&A liquidity language, segment commentary — and SpreadSense answers from the actual document text with a section-level citation. This is the part QuikSpread structurally can't do: their tool reads tables; SpreadSense reads prose.
+
+**3. Excel export.** Top-right of the spread page, click `⬇ Export Excel`. A workbook with one sheet per statement, period columns side by side, total rows highlighted, downloads in <1 second. Hand it to the credit committee as-is.
+
 ---
 
 ## What makes the AI part actually work

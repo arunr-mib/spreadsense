@@ -104,11 +104,55 @@ If standing up a fresh environment (e.g. moving to a new account or staging clon
 
 ## Endpoints
 
-- `GET /sec/fetch?ticker=&form=10-K|10-Q` — auth-required. Resolves ticker via
-  SEC's `company_tickers.json`, fetches the latest matching filing, and renders
-  it to PDF using WeasyPrint. Streams the result back as `application/pdf` with
-  `Content-Disposition: attachment` and `X-PDF-Pages` header. No new env vars.
-  SEC traffic uses User-Agent `SpreadSense (contact@adamsmind.ai)`.
+All endpoints below are auth-required (existing JWT). No new env vars
+introduced by any of them — they reuse `ANTHROPIC_API_KEY` for AI calls.
+
+### SEC EDGAR fetch
+- `GET /sec/fetch?ticker=&form=10-K|10-Q` — Resolves ticker via SEC's
+  `company_tickers.json`, fetches the latest matching filing, and renders it
+  to PDF using WeasyPrint. Streams the result back as `application/pdf` with
+  `Content-Disposition: attachment` and `X-PDF-Pages` header. SEC traffic uses
+  User-Agent `SpreadSense (contact@adamsmind.ai)`. Render timeout 180s
+  (10-Ks with 100+ pages can take 80–120s on Railway).
+
+### Variance commentary (AI)
+- `POST /spreads/{id}/variance-commentary` — Reads the two most recent
+  periods' line items + ratios, sends to Claude Sonnet 4.5, returns 4–6
+  categorized bullets ending with a forward-looking `watch` bullet. Returns
+  422 if the spread has fewer than 2 periods with line-item data. Stateless,
+  ~10–15s end-to-end.
+
+### Ask-the-Filing (AI Q&A)
+- `POST /spreads/{id}/ask` — Body: `{"question": "..."}`. Pulls the
+  most-recent extraction job's `extracted_text` for the spread (column added
+  in migration `0002_extracted_text`, capped at 2 MB) and sends to Claude
+  Sonnet 4.5 with a strict "answer only from this document" prompt. Returns
+  `answer`, `source_hint` (e.g. "Item 1A — Risk Factors"), `filename`,
+  `answered_at`. Returns 422 if no extraction has populated `extracted_text`
+  for the spread yet. Returns 502 on malformed model output with a
+  "rephrase" message.
+
+### QuickBooks Online connector — DEMO STUB
+- `GET /quickbooks/sandbox-info` — Returns the demo company name.
+- `POST /quickbooks/spreads/{spread_id}/periods/{period_id}/import` — Writes
+  a fixed 27-line trial balance for "Acme Manufacturing Inc (Demo Sandbox)"
+  to the chosen period. Tagged with `source = "quickbooks"` and
+  `confidence_score = 1.0`. **v1 is a stub** — replace
+  `app/modules/quickbooks_stub/service.py` with real OAuth + QBO API calls
+  when v2 ships; router contract is stable.
+
+### Excel export
+- `GET /spreads/{id}/export.xlsx` — Returns an `.xlsx` workbook generated via
+  openpyxl. One sheet per statement (IS / BS / CF) with period columns
+  side-by-side, indigo header band, total-row highlighting, accounting number
+  format. Filename: `{Borrower}_Spread_{id}.xlsx`. Headers include
+  `Access-Control-Expose-Headers: Content-Disposition` so the frontend blob
+  download can read it through the Vercel→Railway proxy.
+
+### Workflow — Reopen
+- `PATCH /spreads/{id}/status` body `{"status": "draft"}` is now allowed when
+  the current status is `completed`, for the owning analyst (own work) plus
+  reviewers (return-for-changes). Audit-logged like any other transition.
 
 ---
 

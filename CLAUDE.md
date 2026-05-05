@@ -86,10 +86,22 @@ python3 scripts/fetch_10k_pdf.py msft   # → /tmp/sec_10k.pdf
 
 ## Open Threads / Ideas
 
-- ✅ **SEC fetcher** — shipped May 2026. `GET /sec/fetch` endpoint + `SecFetchControl`
-  in ExtractionPanel. Spec: `docs/superpowers/specs/2026-05-03-sec-fetcher-design.md`.
-  Plan: `docs/superpowers/plans/2026-05-03-sec-fetcher.md`.
+- ✅ **SEC fetcher** — shipped May 2026. `GET /sec/fetch` + `SecFetchControl` in ExtractionPanel.
+  Spec: `docs/superpowers/specs/2026-05-03-sec-fetcher-design.md`.
+- ✅ **Variance Commentary (AI)** — shipped May 5, 2026. `POST /spreads/{id}/variance-commentary` +
+  card on KPIs tab. Sonnet 4.5, 4–6 categorized bullets, ~12s.
+  Spec: `docs/superpowers/specs/2026-05-05-variance-commentary-design.md`.
+- ✅ **Ask-the-Filing (AI Q&A)** — shipped May 5, 2026. `POST /spreads/{id}/ask` + Q&A panel.
+  Persists `extraction_jobs.extracted_text` (migration 0002). Plain-text answers with section hints.
+  Spec: `docs/superpowers/specs/2026-05-05-ask-the-filing-design.md`.
+- ✅ **QuickBooks Online connector — demo stub** — shipped May 5, 2026. Real OAuth in v2 (Q3 2026).
+  Spec: `docs/superpowers/specs/2026-05-05-quickbooks-stub-design.md`.
+- ✅ **Excel export** — shipped May 5, 2026. `GET /spreads/{id}/export.xlsx`, openpyxl.
+  Spec: `docs/superpowers/specs/2026-05-05-excel-export-design.md`.
+- ✅ **Reopen workflow transition** — shipped May 5, 2026. `completed → draft` for owner-analyst + reviewers.
 - Test additional 10-Ks beyond DocuSign + Microsoft.
+- v2 candidates: real QBO OAuth, ratio sheet in Excel export, Ask-the-Filing citation offsets,
+  bank-branded export templates, multi-period (>2) variance commentary.
 - Phase 5: Supabase Auth, S3 file persistence, batch upload, multi-tenant.
 
 ## Working Style
