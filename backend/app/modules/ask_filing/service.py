@@ -74,16 +74,13 @@ RULES:
 - If the answer isn't in the document, say so explicitly.
 - Keep the answer to 2-5 sentences unless the question genuinely requires
   more (e.g. a list).
-- End with a brief "Source:" line indicating roughly where in the document
-  the answer came from (e.g. "Source: Item 1A — Risk Factors", "Source: Note
-  7 — Long-term Debt", "Source: MD&A — Liquidity and Capital Resources").
-  If you can't tell, say "Source: not specifically located".
+- After the answer, on a NEW LINE, add exactly: Source: <where in the
+  document, e.g. "Item 1A - Risk Factors", "Note 7 - Long-term Debt",
+  "MD&A - Liquidity and Capital Resources">. If you can't pinpoint the
+  section, write: Source: not specifically located.
 
-Return ONLY valid JSON, no preamble, no code fences:
-{{
-  "answer": "...the 2-5 sentence answer...",
-  "source_hint": "Item 1A — Risk Factors"
-}}
+Format your response as plain text — no JSON, no code fences, no preamble.
+Just the answer paragraph(s) followed by the Source: line.
 
 QUESTION: {question}
 
@@ -92,27 +89,48 @@ DOCUMENT (truncated to most relevant section):
 """
 
 
+_SOURCE_LINE = re.compile(r"\n\s*Source:\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
+
+
 def _parse_response(raw: str) -> tuple[str, str | None]:
+    """Split plain-text response into (answer, source_hint).
+
+    The model is asked to put 'Source: ...' on the last line. We strip that
+    out as the hint and treat everything before it as the answer.
+    """
     text = raw.strip()
-    fence = re.match(r"^```(?:json)?\s*\n(.*?)\n```\s*$", text, re.DOTALL)
+    # Some older deployments may still get JSON; try to recover gracefully.
+    fence = re.match(r"^```(?:json|text)?\s*\n(.*?)\n```\s*$", text, re.DOTALL)
     if fence:
-        text = fence.group(1)
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError as e:
-        logger.warning("Ask-the-Filing: invalid JSON from Claude: %s", text[:300])
-        raise HTTPException(
-            status_code=502,
-            detail="Could not parse the answer. Try rephrasing your question.",
-        ) from e
-    answer = parsed.get("answer")
-    source_hint = parsed.get("source_hint")
-    if not isinstance(answer, str) or not answer.strip():
+        text = fence.group(1).strip()
+
+    # If it parses as JSON with the old shape, accept it.
+    if text.startswith("{"):
+        try:
+            parsed = json.loads(text)
+            ans = parsed.get("answer")
+            src = parsed.get("source_hint")
+            if isinstance(ans, str) and ans.strip():
+                return ans.strip(), (src.strip() if isinstance(src, str) else None)
+        except json.JSONDecodeError:
+            pass  # fall through to plain-text parsing
+
+    # Plain-text path: extract trailing 'Source: ...' line if present.
+    match = _SOURCE_LINE.search(text)
+    if match:
+        source = match.group(1).strip().rstrip(".")
+        answer = text[: match.start()].rstrip()
+    else:
+        source = None
+        answer = text
+
+    if not answer:
+        logger.warning("Ask-the-Filing: empty answer from raw: %s", raw[:300])
         raise HTTPException(
             status_code=502,
             detail="The answer was empty. Try rephrasing your question.",
         )
-    return answer.strip(), (source_hint.strip() if isinstance(source_hint, str) else None)
+    return answer, source
 
 
 async def _claude_generate(prompt: str) -> str:
