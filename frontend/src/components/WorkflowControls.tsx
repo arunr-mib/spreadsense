@@ -10,43 +10,89 @@ interface Props {
   onStatusChange: () => void
 }
 
-function getNextAction(
+interface Action {
+  label: string
+  targetStatus: string
+  variant: 'primary' | 'secondary'
+}
+
+function getActions(
   spread: Spread,
   userId: number,
   role: string,
-): { label: string; targetStatus: string } | null {
-  if (spread.status === 'draft' && role === 'analyst' && spread.created_by === userId) {
-    return { label: 'Submit for Review', targetStatus: 'completed' }
+): Action[] {
+  const actions: Action[] = []
+  const isOwnerAnalyst =
+    role === 'analyst' && spread.created_by === userId
+  const isReviewer = role === 'sr_credit_analyst' || role === 'admin'
+
+  if (spread.status === 'draft' && isOwnerAnalyst) {
+    actions.push({
+      label: 'Submit for Review',
+      targetStatus: 'completed',
+      variant: 'primary',
+    })
   }
-  if (spread.status === 'completed' && (role === 'sr_credit_analyst' || role === 'admin')) {
-    return { label: 'Mark as Reviewed', targetStatus: 'reviewed' }
+
+  if (spread.status === 'completed') {
+    if (isReviewer) {
+      actions.push({
+        label: 'Mark as Reviewed',
+        targetStatus: 'reviewed',
+        variant: 'primary',
+      })
+    }
+    if (isOwnerAnalyst || isReviewer) {
+      actions.push({
+        label: 'Reopen',
+        targetStatus: 'draft',
+        variant: 'secondary',
+      })
+    }
   }
+
   if (spread.status === 'reviewed') {
-    return { label: 'Mark as Exported', targetStatus: 'exported' }
+    actions.push({
+      label: 'Mark as Exported',
+      targetStatus: 'exported',
+      variant: 'primary',
+    })
   }
-  return null
+
+  return actions
 }
 
-export default function WorkflowControls({ spread, currentUserId, currentUserRole, onStatusChange }: Props) {
-  const action = getNextAction(spread, currentUserId, currentUserRole)
+export default function WorkflowControls({
+  spread,
+  currentUserId,
+  currentUserRole,
+  onStatusChange,
+}: Props) {
+  const actions = getActions(spread, currentUserId, currentUserRole)
 
   const mutation = useMutation({
-    mutationFn: (targetStatus: string) => patchSpreadStatus(spread.id, targetStatus),
+    mutationFn: (targetStatus: string) =>
+      patchSpreadStatus(spread.id, targetStatus),
     onSuccess: onStatusChange,
   })
 
   return (
     <div className="flex items-center gap-3">
       <StatusBadge status={spread.status} />
-      {action && (
+      {actions.map((action) => (
         <button
+          key={action.targetStatus}
           onClick={() => mutation.mutate(action.targetStatus)}
           disabled={mutation.isPending}
-          className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+          className={
+            action.variant === 'primary'
+              ? 'px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50'
+              : 'px-3 py-1.5 text-xs font-medium bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-page)] disabled:opacity-50'
+          }
         >
           {mutation.isPending ? 'Saving…' : action.label}
         </button>
-      )}
+      ))}
     </div>
   )
 }

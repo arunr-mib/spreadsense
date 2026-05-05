@@ -96,10 +96,35 @@ async def test_invalid_transition_rejected(client, spread_id, sr_headers):
     assert resp.status_code == 403
 
 
-async def test_rollback_not_allowed(client, spread_id, analyst_headers):
+async def test_owner_analyst_can_reopen_completed_to_draft(client, spread_id, analyst_headers):
+    """Owner can send a completed spread back to draft for further edits."""
     await client.patch(f"/spreads/{spread_id}/status", json={"status": "completed"}, headers=analyst_headers)
     resp = await client.patch(f"/spreads/{spread_id}/status", json={"status": "draft"}, headers=analyst_headers)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "draft"
+
+
+async def test_reviewer_can_reopen_completed_to_draft(client, spread_id, analyst_headers, sr_headers):
+    """Reviewer can return a completed spread to draft (reject for changes)."""
+    await client.patch(f"/spreads/{spread_id}/status", json={"status": "completed"}, headers=analyst_headers)
+    resp = await client.patch(f"/spreads/{spread_id}/status", json={"status": "draft"}, headers=sr_headers)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "draft"
+
+
+async def test_reviewed_cannot_rollback_to_draft(client, spread_id, analyst_headers, sr_headers):
+    """Reopen is only from completed, not from reviewed (already signed off)."""
+    await client.patch(f"/spreads/{spread_id}/status", json={"status": "completed"}, headers=analyst_headers)
+    await client.patch(f"/spreads/{spread_id}/status", json={"status": "reviewed"}, headers=sr_headers)
+    resp = await client.patch(f"/spreads/{spread_id}/status", json={"status": "draft"}, headers=sr_headers)
     assert resp.status_code == 403
+
+
+async def test_non_owner_analyst_cannot_reopen(client, spread_id, analyst_headers, analyst2_headers):
+    """A different analyst should not be able to reopen another analyst's spread."""
+    await client.patch(f"/spreads/{spread_id}/status", json={"status": "completed"}, headers=analyst_headers)
+    resp = await client.patch(f"/spreads/{spread_id}/status", json={"status": "draft"}, headers=analyst2_headers)
+    assert resp.status_code == 404
 
 
 async def test_history_returns_transitions(client, spread_id, analyst_headers, sr_headers):

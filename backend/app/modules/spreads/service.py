@@ -10,7 +10,13 @@ from app.modules.spreads.schemas import AuditEntry, SpreadCreate
 
 ALLOWED_TRANSITIONS: dict[str, list[tuple[str, set[UserRole]]]] = {
     "draft":     [("completed", {UserRole.analyst})],
-    "completed": [("reviewed",  {UserRole.sr_credit_analyst, UserRole.admin})],
+    "completed": [
+        ("reviewed", {UserRole.sr_credit_analyst, UserRole.admin}),
+        # Reopen: send back to draft for further edits. Owner-analyst can reopen
+        # their own work; reviewers can reopen to send back for changes.
+        # Owner check is enforced by get_spread (analyst can only see own spreads).
+        ("draft",    {UserRole.analyst, UserRole.sr_credit_analyst, UserRole.admin}),
+    ],
     "reviewed":  [("exported",  {UserRole.analyst, UserRole.sr_credit_analyst, UserRole.admin})],
 }
 
