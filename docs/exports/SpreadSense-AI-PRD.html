@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SpreadSense AI — PRD v1.4</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SpreadSense AI — PRD v1.4</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#spreadsense-ai-product-requirements-document"
+id="toc-spreadsense-ai-product-requirements-document">SpreadSense AI —
+Product Requirements Document</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#executive-summary" id="toc-executive-summary">1. Executive
+Summary</a></li>
+<li><a href="#background-motivation" id="toc-background-motivation">2.
+Background &amp; Motivation</a></li>
+<li><a href="#problem-statement" id="toc-problem-statement">3. Problem
+Statement</a></li>
+<li><a href="#user-personas" id="toc-user-personas">4. User
+Personas</a></li>
+<li><a href="#goals-non-goals" id="toc-goals-non-goals">5. Goals &amp;
+Non-Goals</a></li>
+<li><a href="#user-stories" id="toc-user-stories">6. User
+Stories</a></li>
+<li><a href="#functional-requirements"
+id="toc-functional-requirements">7. Functional Requirements</a></li>
+<li><a href="#aiml-system-requirements"
+id="toc-aiml-system-requirements">8. AI/ML System Requirements</a></li>
+<li><a href="#technical-architecture" id="toc-technical-architecture">9.
+Technical Architecture</a></li>
+<li><a href="#data-requirements" id="toc-data-requirements">10. Data
+Requirements</a></li>
+<li><a href="#security-compliance" id="toc-security-compliance">11.
+Security &amp; Compliance</a></li>
+<li><a href="#success-metrics-okrs" id="toc-success-metrics-okrs">12.
+Success Metrics &amp; OKRs</a></li>
+<li><a href="#risks-mitigations" id="toc-risks-mitigations">13. Risks
+&amp; Mitigations</a></li>
+<li><a href="#launch-plan-milestones"
+id="toc-launch-plan-milestones">14. Launch Plan &amp;
+Milestones</a></li>
+<li><a href="#open-questions" id="toc-open-questions">15. Open
+Questions</a></li>
+<li><a href="#appendix" id="toc-appendix">16. Appendix</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="spreadsense-ai-product-requirements-document">SpreadSense AI —
+Product Requirements Document</h1>
+<p><strong>Document Status:</strong> Draft v1.4 — May 5, 2026
+<strong>Date:</strong> May 5, 2026 (originally April 21, 2026)
+<strong>v1.4 changelog:</strong> Adds AI variance commentary,
+Ask-the-Filing free-text Q&amp;A, QuickBooks Online connector (demo stub
+for v1; real OAuth in v2), Excel export, and Reopen workflow transition.
+All five shipped to production prior to credit-leadership review.
+<strong>Owner:</strong> Arun Rajendiran <strong>Reviewers:</strong>
+Credit Technology, Risk Management, Engineering
+<strong>Confidentiality:</strong> Internal — Not for Distribution
+<strong>Live URL:</strong> https://spreadsense.vercel.app
+<strong>Source:</strong> https://github.com/arunr-mib/spreadsense
+(private)</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-executive-summary">Executive Summary</a></li>
+<li><a href="#2-background--motivation">Background &amp;
+Motivation</a></li>
+<li><a href="#3-problem-statement">Problem Statement</a></li>
+<li><a href="#4-user-personas">User Personas</a></li>
+<li><a href="#5-goals--non-goals">Goals &amp; Non-Goals</a></li>
+<li><a href="#6-user-stories">User Stories</a></li>
+<li><a href="#7-functional-requirements">Functional
+Requirements</a></li>
+<li><a href="#8-aiml-system-requirements">AI/ML System
+Requirements</a></li>
+<li><a href="#9-technical-architecture">Technical Architecture</a></li>
+<li><a href="#10-data-requirements">Data Requirements</a></li>
+<li><a href="#11-security--compliance">Security &amp;
+Compliance</a></li>
+<li><a href="#12-success-metrics--okrs">Success Metrics &amp;
+OKRs</a></li>
+<li><a href="#13-risks--mitigations">Risks &amp; Mitigations</a></li>
+<li><a href="#14-launch-plan--milestones">Launch Plan &amp;
+Milestones</a></li>
+<li><a href="#15-open-questions">Open Questions</a></li>
+<li><a href="#16-appendix">Appendix</a></li>
+</ol>
+<hr />
+<h2 id="executive-summary">1. Executive Summary</h2>
+<p><strong>SpreadSense AI</strong> is an AI-native financial spreading
+platform designed for commercial bank credit analysts. It transforms the
+manually intensive process of spreading borrower financial statements
+into a structured, AI-assisted workflow that produces committee-ready
+credit memos in minutes rather than hours.</p>
+<p>The platform combines Claude AI’s document extraction capabilities
+with RMA (Risk Management Association) and UCA (Uniform Credit Analysis)
+Cash Flow standards to automatically parse PDFs, populate financial
+statement spreads, calculate covenant ratios, flag threshold breaches,
+generate narrative summaries, and export professional credit memos — all
+within a single, role-aware web application.</p>
+<p><strong>Key value proposition:</strong> A credit analyst who
+previously spent 3–4 hours manually keying numbers from a borrower’s
+financial statements can complete a full spread with AI-generated
+narrative in under 30 minutes, with senior analysts able to review a
+portfolio dashboard of all active deals in one view.</p>
+<hr />
+<h2 id="background-motivation">2. Background &amp; Motivation</h2>
+<h3 id="industry-context">Industry Context</h3>
+<p>Commercial lending relies on “spreading” — the process of extracting,
+normalizing, and analyzing borrower financial data across multiple
+periods to assess creditworthiness. Analysts manually transcribe income
+statements, balance sheets, and cash flow statements from PDFs or paper
+documents into spreadsheet templates, then calculate ratios, compare to
+covenants, and write narrative summaries for credit committee
+presentation.</p>
+<p>This process is: - <strong>Time-intensive</strong>: 3–6 hours per
+spread for complex borrowers with multiple years of data -
+<strong>Error-prone</strong>: Manual data entry introduces transcription
+errors that can misrepresent creditworthiness -
+<strong>Inconsistent</strong>: Different analysts follow different
+formatting and narrative conventions, making portfolio-level comparison
+difficult - <strong>Unscalable</strong>: Portfolio growth requires
+proportional analyst headcount growth</p>
+<h3 id="ai-opportunity">AI Opportunity</h3>
+<p>Large language models with vision and document understanding
+capabilities (e.g., Claude 3.x) are now capable of accurately extracting
+structured financial data from PDFs, including: - Identifying line items
+across varying statement formats (GAAP, tax basis, management prepared)
+- Normalizing non-standard line item names to canonical schema -
+Inferring missing period data from multi-year comparative statements -
+Generating coherent, standardized credit narrative prose</p>
+<p>This enables a human-in-the-loop workflow where AI performs the
+mechanical extraction and first-pass narrative, while the analyst
+reviews, corrects, and approves — shifting analyst time from data entry
+to credit judgment.</p>
+<hr />
+<h2 id="problem-statement">3. Problem Statement</h2>
+<h3 id="primary-problem">Primary Problem</h3>
+<p><strong>Commercial credit analysts at small-to-midsize banks and
+credit unions spend 60–80% of their spreading time on mechanical data
+transcription tasks that add no analytical value.</strong> This leaves
+insufficient time for actual credit analysis, causes deal velocity to
+suffer, and creates burnout among experienced analysts.</p>
+<h3 id="secondary-problems">Secondary Problems</h3>
+<ol type="1">
+<li><strong>Inconsistency at scale</strong>: Without a structured
+platform, each analyst’s spread looks different, making it impossible
+for senior analysts and portfolio managers to quickly compare deals or
+monitor portfolio health in aggregate.</li>
+<li><strong>Knowledge loss</strong>: Tribal knowledge about borrower
+trends and covenant watch items lives in analyst heads or email threads
+rather than a searchable, structured system.</li>
+<li><strong>Credit memo bottleneck</strong>: Formatting a
+committee-ready credit memo from a completed spread is a separate,
+multi-hour task — often done in Word or PowerPoint — creating a
+disconnect between the analysis and the deliverable.</li>
+<li><strong>No portfolio visibility</strong>: Senior credit officers
+lack a real-time view of pipeline status, covenant breach rates, and
+emerging risk concentrations across their portfolio.</li>
+</ol>
+<h3 id="who-is-affected">Who is affected</h3>
+<ul>
+<li><strong>Credit Analysts</strong> (primary): 2–6 hours saved per
+spread; reduced errors; consistent output format</li>
+<li><strong>Senior Credit Officers / Portfolio Managers</strong>:
+Real-time portfolio dashboard; standardized memos for committee
+review</li>
+<li><strong>Compliance / Risk</strong>: Auditable spread history;
+consistent ratio methodology; AI confidence scoring</li>
+</ul>
+<hr />
+<h2 id="user-personas">4. User Personas</h2>
+<h3 id="persona-1-jordan-credit-analyst">Persona 1: Jordan — Credit
+Analyst</h3>
+<ul>
+<li><strong>Role:</strong> Junior-to-mid credit analyst, 1–5 years
+experience</li>
+<li><strong>Context:</strong> Handles 15–25 active spreads at any time;
+primary data entry responsibility</li>
+<li><strong>Pain points:</strong> Spends most of working day keying
+numbers; stressed about errors; memo formatting feels like busy
+work</li>
+<li><strong>Goals:</strong> Complete accurate spreads quickly; learn
+from AI suggestions; produce professional memos without design work</li>
+<li><strong>Technical comfort:</strong> Moderate — comfortable with
+Excel, SaaS tools; not a developer</li>
+<li><strong>Key workflows:</strong> Upload PDF → review AI extraction →
+adjust line items → view ratios → export memo</li>
+</ul>
+<h3 id="persona-2-alex-senior-credit-analyst-credit-officer">Persona 2:
+Alex — Senior Credit Analyst / Credit Officer</h3>
+<ul>
+<li><strong>Role:</strong> 8+ years experience; reviews analyst work;
+presents to credit committee</li>
+<li><strong>Context:</strong> Oversees 5–10 analysts; needs
+portfolio-level view; accountable for credit quality</li>
+<li><strong>Pain points:</strong> Must review each spread individually
+in Excel; no aggregate dashboard; inconsistent memo formats from
+different analysts</li>
+<li><strong>Goals:</strong> Trust AI-assisted spreads; quickly identify
+portfolio risk; standardize committee output</li>
+<li><strong>Technical comfort:</strong> High — power Excel user;
+skeptical of black-box AI; wants explainability</li>
+<li><strong>Key workflows:</strong> Dashboard review → drill into
+breaches → review narratives → approve memos</li>
+</ul>
+<h3 id="persona-3-sam-bank-administrator-it">Persona 3: Sam — Bank
+Administrator / IT</h3>
+<ul>
+<li><strong>Role:</strong> Manages user access, system
+configuration</li>
+<li><strong>Context:</strong> Responsible for onboarding new analysts;
+managing user roles; audit trail</li>
+<li><strong>Pain points:</strong> No self-service user management; no
+audit logs</li>
+<li><strong>Goals:</strong> Secure role-based access; easy onboarding;
+compliance-friendly audit trail</li>
+<li><strong>Technical comfort:</strong> High</li>
+<li><strong>Key workflows:</strong> Create users → assign roles → view
+activity logs</li>
+</ul>
+<hr />
+<h2 id="goals-non-goals">5. Goals &amp; Non-Goals</h2>
+<h3 id="goals">Goals</h3>
+<p><strong>G1 — AI-Assisted Extraction:</strong> Reduce
+time-to-complete-spread by ≥60% versus manual entry baseline through
+AI-powered PDF extraction with human review/correction.</p>
+<p><strong>G2 — Standards Compliance:</strong> Implement RMA and UCA
+Cash Flow methodology for all ratio calculations, ensuring
+industry-standard analysis that satisfies bank examination
+requirements.</p>
+<p><strong>G3 — End-to-End Workflow:</strong> Cover the full analyst
+workflow in a single platform: upload → spread → analyze → narrate →
+memo → export, eliminating the need for external tools.</p>
+<p><strong>G4 — Portfolio Intelligence:</strong> Give senior analysts
+and admins a real-time portfolio view with breach alerts, pipeline
+status, and deal velocity metrics.</p>
+<p><strong>G5 — Consistency at Scale:</strong> Ensure all spreads and
+memos produced by any analyst follow the same format, methodology, and
+presentation standards.</p>
+<p><strong>G6 — Explainable AI:</strong> Every AI output (extracted line
+item, ratio calculation, narrative claim) must be traceable to source
+data, building analyst trust and satisfying audit requirements.</p>
+<h3 id="non-goals-v1">Non-Goals (v1)</h3>
+<ul>
+<li><strong>Core banking integration</strong>: No direct connection to
+loan origination systems (LOS), core banking platforms, or data
+warehouses in v1. CSV/PDF import only.</li>
+<li><strong>Automated decisioning</strong>: SpreadSense AI does not make
+credit decisions. It provides analysis to support human judgment.</li>
+<li><strong>Consumer / retail lending</strong>: v1 targets commercial
+borrowers only. No personal financial statement spreading.</li>
+<li><strong>Mobile app</strong>: Web-only in v1; no native
+iOS/Android.</li>
+<li><strong>Multi-language document support</strong>: English-language
+financial statements only in v1.</li>
+<li><strong>Real-time market data</strong>: No integration with market
+data feeds (e.g., Bloomberg) in v1.</li>
+</ul>
+<hr />
+<h2 id="user-stories">6. User Stories</h2>
+<h3 id="extraction-spreading">Extraction &amp; Spreading</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 23%" />
+<col style="width: 34%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>As a…</th>
+<th>I want to…</th>
+<th>So that…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US-01</td>
+<td>Credit Analyst</td>
+<td>Upload a borrower’s tax return or CPA-prepared statements PDF</td>
+<td>The system extracts financial line items automatically</td>
+</tr>
+<tr>
+<td>US-02</td>
+<td>Credit Analyst</td>
+<td>Review AI-extracted line items with confidence scores</td>
+<td>I can quickly identify and correct uncertain extractions</td>
+</tr>
+<tr>
+<td>US-03</td>
+<td>Credit Analyst</td>
+<td>Map non-standard line item names to canonical schema</td>
+<td>The spread follows RMA/UCA methodology</td>
+</tr>
+<tr>
+<td>US-04</td>
+<td>Credit Analyst</td>
+<td>Enter multiple fiscal years in a single spread</td>
+<td>I can analyze trends across periods</td>
+</tr>
+<tr>
+<td>US-05</td>
+<td>Credit Analyst</td>
+<td>Save partial spreads and return later</td>
+<td>I don’t lose work if interrupted</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analysis-ratios">Analysis &amp; Ratios</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 23%" />
+<col style="width: 34%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>As a…</th>
+<th>I want to…</th>
+<th>So that…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US-06</td>
+<td>Credit Analyst</td>
+<td>See auto-calculated DSCR, leverage, liquidity, and coverage
+ratios</td>
+<td>I don’t have to manually compute formulas</td>
+</tr>
+<tr>
+<td>US-07</td>
+<td>Credit Analyst</td>
+<td>See which ratios breach loan covenant thresholds</td>
+<td>I can immediately identify compliance issues</td>
+</tr>
+<tr>
+<td>US-08</td>
+<td>Credit Analyst</td>
+<td>Configure custom threshold values per deal</td>
+<td>Different loan structures have different covenants</td>
+</tr>
+<tr>
+<td>US-09</td>
+<td>Sr. Analyst</td>
+<td>See ratios trending across multiple periods</td>
+<td>I can identify deteriorating credit quality over time</td>
+</tr>
+</tbody>
+</table>
+<h3 id="narrative-memo">Narrative &amp; Memo</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 23%" />
+<col style="width: 34%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>As a…</th>
+<th>I want to…</th>
+<th>So that…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US-10</td>
+<td>Credit Analyst</td>
+<td>Generate an AI narrative summary of the spread</td>
+<td>I have a starting point I can edit rather than writing from
+scratch</td>
+</tr>
+<tr>
+<td>US-11</td>
+<td>Credit Analyst</td>
+<td>Edit the AI narrative before saving</td>
+<td>I retain control over the final written analysis</td>
+</tr>
+<tr>
+<td>US-12</td>
+<td>Credit Analyst</td>
+<td>Export a formatted PDF credit memo</td>
+<td>I can present to credit committee without reformatting in Word</td>
+</tr>
+<tr>
+<td>US-13</td>
+<td>Credit Analyst</td>
+<td>Attach recommendation, risk rating, and facility details to the
+memo</td>
+<td>The memo is complete and committee-ready</td>
+</tr>
+</tbody>
+</table>
+<h3 id="portfolio-admin">Portfolio &amp; Admin</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 23%" />
+<col style="width: 34%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>As a…</th>
+<th>I want to…</th>
+<th>So that…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US-14</td>
+<td>Sr. Analyst</td>
+<td>View a dashboard of all deals with status, analyst, and breach
+counts</td>
+<td>I can monitor portfolio health at a glance</td>
+</tr>
+<tr>
+<td>US-15</td>
+<td>Sr. Analyst</td>
+<td>Filter dashboard by status, analyst, or breach severity</td>
+<td>I can prioritize my review queue</td>
+</tr>
+<tr>
+<td>US-16</td>
+<td>Admin</td>
+<td>Create and manage user accounts with role assignments</td>
+<td>I can onboard analysts and control access</td>
+</tr>
+<tr>
+<td>US-17</td>
+<td>Admin</td>
+<td>View an audit log of all spread edits and AI calls</td>
+<td>I can satisfy examination requirements</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="functional-requirements">7. Functional Requirements</h2>
+<h3 id="borrower-management">7.1 Borrower Management</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-01</td>
+<td>System shall maintain a borrower record with name, industry
+(NAICS/SIC), fiscal year end, and creation metadata</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Borrowers shall be searchable by name and filterable by
+industry</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>A borrower overview page shall show all associated spreads with
+status and last-modified date</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Borrower records shall be editable by analysts with appropriate
+role</td>
+<td>P1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spread-management">7.2 Spread Management</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-05</td>
+<td>A spread shall be associated with exactly one borrower and have a
+deal name, loan type, and status</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Spread status workflow: <code>draft</code> → <code>in_review</code>
+→ <code>approved</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>System shall support Income Statement, Balance Sheet, and Cash Flow
+statement types per period</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-08</td>
+<td>Each period shall record fiscal year, period type (annual/interim),
+and basis (GAAP/Tax/Management)</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-09</td>
+<td>Line items shall support canonical schema mapping for RMA
+normalization</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-10</td>
+<td>Spreads shall display multiple periods side-by-side for trend
+analysis</td>
+<td>P1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ai-extraction">7.3 AI Extraction</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-11</td>
+<td>System shall accept PDF uploads of financial statements (max
+50MB)</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-12</td>
+<td>AI extraction shall return line items with values, confidence
+scores, and source page references</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-13</td>
+<td>Analysts shall be able to accept, reject, or override any
+AI-extracted value</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-14</td>
+<td>System shall store the original AI extraction alongside
+analyst-corrected values for audit</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-15</td>
+<td>AI extraction shall complete within 60 seconds for a 20-page PDF on
+standard hardware</td>
+<td>P1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analytics-ratios">7.4 Analytics &amp; Ratios</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-16</td>
+<td>System shall calculate DSCR, leverage ratio, current ratio, quick
+ratio, and operating cash flow coverage</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-17</td>
+<td>Ratios shall be recalculated automatically on any line item
+change</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-18</td>
+<td>System shall flag ratios that breach configurable thresholds as
+<code>breach</code> or <code>near_threshold</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-19</td>
+<td>Default thresholds shall follow RMA industry medians; per-deal
+overrides shall be supported</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-20</td>
+<td>Analytics shall be exposed via a KPI strip on the spread detail
+page</td>
+<td>P0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="narrative-generation">7.5 Narrative Generation</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-21</td>
+<td>System shall generate an AI narrative summarizing spread financials,
+ratio performance, and breach alerts</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-22</td>
+<td>Narrative shall be editable by the analyst</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-23</td>
+<td>System shall version-control narrative edits and expose edit
+history</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-24</td>
+<td>Narrative generation shall incorporate prior analyst edits as
+context for regeneration</td>
+<td>P1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="credit-memo">7.6 Credit Memo</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-25</td>
+<td>System shall generate a formatted PDF credit memo combining spread
+data, ratios, narrative, and analyst-entered metadata</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-26</td>
+<td>Memo metadata shall include: recommendation, risk rating, facility
+type/amount/purpose/maturity, collateral</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-27</td>
+<td>PDF export shall use consistent bank-branded template</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-28</td>
+<td>Memo shall include a generated timestamp and analyst
+attribution</td>
+<td>P0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="portfolio-dashboard">7.7 Portfolio Dashboard</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-29</td>
+<td>Dashboard shall display pipeline status counts (draft, in_review,
+approved)</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-30</td>
+<td>Dashboard shall surface active breach alerts across all spreads with
+borrower and ratio context</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-31</td>
+<td>Dashboard shall display an enriched deal table with borrower,
+analyst, status, period count, and breach count</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-32</td>
+<td>Dashboard shall be restricted to <code>sr_credit_analyst</code> and
+<code>admin</code> roles</td>
+<td>P0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="user-access-management">7.8 User &amp; Access Management</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-33</td>
+<td>System shall support three roles: <code>credit_analyst</code>,
+<code>sr_credit_analyst</code>, <code>admin</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-34</td>
+<td>Authentication shall use JWT-based sessions</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-35</td>
+<td>Analysts shall only see their own spreads; sr_analysts and admins
+see all</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-36</td>
+<td>Admin role shall manage user accounts and role assignments</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-36a</td>
+<td>Workflow shall support a <code>completed → draft</code> (Reopen)
+transition for the owning analyst (to fix their own work) and reviewers
+(to send back for changes)</td>
+<td>P0 — shipped May 5, 2026</td>
+</tr>
+</tbody>
+</table>
+<h3 id="variance-commentary-ai">7.9 Variance Commentary (AI)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-37</td>
+<td>When a spread has at least two periods with line-item data, system
+shall offer a “Explain changes” action that returns AI-generated
+variance commentary</td>
+<td>P0 — shipped May 5, 2026</td>
+</tr>
+<tr>
+<td>F-38</td>
+<td>Commentary shall be returned as 4–6 structured bullets, each tagged
+with a category (revenue / margins / liquidity / leverage /
+working_capital / watch)</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-39</td>
+<td>The final bullet shall always carry the <code>watch</code> category
+and identify a forward-looking credit-risk concern for the next
+reporting period</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-40</td>
+<td>Commentary shall be regeneratable with a single click; results are
+stateless and not persisted</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>F-41</td>
+<td>If fewer than two periods have line-item data, the UI shall surface
+“add a second fiscal year period” guidance instead of the action</td>
+<td>P0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ask-the-filing-ai-qa">7.10 Ask-the-Filing (AI Q&amp;A)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-42</td>
+<td>System shall persist the full extracted plain-text of every
+confirmed extraction (column
+<code>extraction_jobs.extracted_text</code>, capped at 2 MB) for
+downstream Q&amp;A use</td>
+<td>P0 — shipped May 5, 2026</td>
+</tr>
+<tr>
+<td>F-43</td>
+<td>System shall provide a per-spread free-text Q&amp;A endpoint that
+answers questions strictly grounded in the most-recent extracted
+document for that spread</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-44</td>
+<td>Each answer shall include a “source hint” identifying the section of
+the source document that supports it (e.g. “Item 1A — Risk Factors”,
+“Note 8 — Debt”); when not locatable, the system shall say so
+explicitly</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-45</td>
+<td>The model shall refuse to answer questions that cannot be supported
+from the extracted text; it shall not draw on external or pretrained
+knowledge for borrower-specific facts</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-46</td>
+<td>UI shall offer 4 default suggested questions tuned for credit
+analysis (risk factors, debt maturity, related-party transactions,
+MD&amp;A liquidity)</td>
+<td>P0</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="direct-accounting-system-connector-quickbooks-online-v1-stub">7.11
+Direct Accounting-System Connector — QuickBooks Online (v1: stub)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-47</td>
+<td>System shall offer a “Connect QuickBooks” path inside
+ExtractionPanel as a third ingestion option alongside PDF upload and SEC
+fetcher</td>
+<td>P0 — stub shipped May 5, 2026</td>
+</tr>
+<tr>
+<td>F-48</td>
+<td>v1 stub shall write a fixed, realistic SMB trial balance (27 line
+items spanning IS / BS / CF) for an “Acme Manufacturing (Demo Sandbox)”
+entity into the analyst’s chosen period</td>
+<td>P0 — v1 only</td>
+</tr>
+<tr>
+<td>F-49</td>
+<td>Imported line items shall be tagged with
+<code>source = "quickbooks"</code> and
+<code>confidence_score = 1.0</code> to distinguish them from
+PDF-extracted values</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-50</td>
+<td>v2 (target Q3 2026) shall replace the stub with real Intuit OAuth
+2.0, sandbox + production app registration, refresh-token storage, and
+Chart-of-Accounts → RMA-template mapping. Router contract
+(<code>POST /quickbooks/spreads/{id}/periods/{p}/import</code>) is
+stable across the migration.</td>
+<td>P1 — v2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="excel-export">7.12 Excel Export</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-51</td>
+<td>System shall provide a per-spread Excel export endpoint that returns
+a valid <code>.xlsx</code> workbook with one sheet per statement (IS /
+BS / CF)</td>
+<td>P0 — shipped May 5, 2026</td>
+</tr>
+<tr>
+<td>F-52</td>
+<td>Each sheet shall render fiscal-year columns side-by-side, accounting
+number format, total-row highlighting, and a banner with borrower + deal
+name</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-53</td>
+<td>Filename shall encode borrower and spread ID
+(e.g. <code>UAT_Docusign2_Inc_Spread_1.xlsx</code>)</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>F-54</td>
+<td>Bank-branded layout (logo, footer, formula cells) is deferred to
+v2</td>
+<td>P1 — v2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="aiml-system-requirements">8. AI/ML System Requirements</h2>
+<h3 id="ai-model-architecture">8.1 AI Model Architecture</h3>
+<p>SpreadSense AI uses a <strong>retrieval-augmented generation
+(RAG)</strong> approach layered on a large language model (Claude 3.x)
+for all AI-powered features:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 28%" />
+<col style="width: 15%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>AI Approach</th>
+<th>Model</th>
+<th>Latency Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PDF extraction</td>
+<td>Vision + structured extraction</td>
+<td>Claude 3.5 Sonnet (vision)</td>
+<td>&lt; 60s / 20-pg PDF</td>
+</tr>
+<tr>
+<td>Line item normalization</td>
+<td>Classification + few-shot</td>
+<td>Claude 3.5 Haiku</td>
+<td>&lt; 5s</td>
+</tr>
+<tr>
+<td>Credit narrative generation</td>
+<td>Long-context generation</td>
+<td>Claude 3.5 Sonnet</td>
+<td>&lt; 30s</td>
+</tr>
+<tr>
+<td>Breach alert summarization</td>
+<td>Constrained generation</td>
+<td>Claude 3.5 Haiku</td>
+<td>&lt; 10s</td>
+</tr>
+</tbody>
+</table>
+<h3 id="extraction-pipeline">8.2 Extraction Pipeline</h3>
+<pre><code>[PDF Upload]
+     │
+     ▼
+[PDF → Page Images] (pdf2image, 150 DPI)
+     │
+     ▼
+[Claude Vision: Extract raw line items + values per page]
+     ├── Output: [{line_item_raw, value, page_ref, confidence}]
+     │
+     ▼
+[Normalization: Map raw labels → canonical schema]
+     ├── Rule-based: exact match dictionary (3,000+ entries)
+     ├── AI fallback: Claude few-shot classification for unknowns
+     └── Output: [{canonical_label, value, confidence, source_label}]
+     │
+     ▼
+[Analyst Review UI: accept / override / reject per item]
+     │
+     ▼
+[Confirmed Spread Line Items → DB]</code></pre>
+<p><strong>Confidence Scoring:</strong> - <code>HIGH</code> (≥0.85):
+Green — likely correct, no analyst flag required - <code>MEDIUM</code>
+(0.60–0.84): Yellow — suggest analyst review - <code>LOW</code>
+(&lt;0.60): Red — require analyst confirmation before saving</p>
+<h3 id="narrative-generation-1">8.3 Narrative Generation</h3>
+<p><strong>Input context provided to model:</strong> - Borrower name,
+industry, fiscal year end - Loan type and purpose - All spread periods:
+key IS/BS/CF line items, ratios, breach flags - Prior analyst-edited
+narrative (if regenerating) - Breach alerts with severity and trend
+direction</p>
+<p><strong>Output specification:</strong> - 3–5 paragraphs: (1) Company
+overview, (2) Revenue and profitability, (3) Leverage and liquidity, (4)
+Cash flow analysis, (5) Risk summary and covenant compliance - Factual
+claims must reference specific financial figures from the spread -
+Flags: model must not speculate about future performance or include
+non-spread-derived facts - Tone: professional credit analysis register
+(not marketing language)</p>
+<p><strong>Guardrails:</strong> - System prompt explicitly prohibits
+hallucination of financial figures - Post-generation validation: regex
+checks that all dollar/percentage figures in output appear in source
+spread data - Confidence score for each paragraph returned alongside
+text</p>
+<h3 id="model-evaluation">8.4 Model Evaluation</h3>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 54%" />
+</colgroup>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measurement Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extraction accuracy (numeric values)</td>
+<td>≥95% exact match</td>
+<td>Holdout set of 100 manually verified spreads</td>
+</tr>
+<tr>
+<td>Line item normalization accuracy</td>
+<td>≥92% correct canonical label</td>
+<td>Labeled dataset of 5,000 line item names</td>
+</tr>
+<tr>
+<td>Narrative factual accuracy</td>
+<td>≥98% figures traceable to spread</td>
+<td>Automated post-generation validation</td>
+</tr>
+<tr>
+<td>Extraction latency p95</td>
+<td>≤60s for 20-page PDF</td>
+<td>Production logging</td>
+</tr>
+<tr>
+<td>Narrative generation latency p95</td>
+<td>≤30s</td>
+<td>Production logging</td>
+</tr>
+<tr>
+<td>Analyst acceptance rate (extractions)</td>
+<td>≥80% accepted without correction</td>
+<td>In-product telemetry</td>
+</tr>
+<tr>
+<td>Analyst edit rate (narratives)</td>
+<td>&lt;40% requiring substantive edits</td>
+<td>In-product telemetry</td>
+</tr>
+</tbody>
+</table>
+<h3 id="prompt-engineering-version-control">8.5 Prompt Engineering &amp;
+Version Control</h3>
+<ul>
+<li>All system prompts and few-shot examples stored in
+version-controlled repository</li>
+<li>Prompt changes require A/B testing on holdout set before production
+deployment</li>
+<li>Prompt versioning tracked in <code>ai_call_logs</code> table
+(<code>prompt_version</code> column)</li>
+<li>Regression testing suite of 50 canonical spread examples run on
+every prompt change</li>
+</ul>
+<h3 id="ai-safety-ethics">8.6 AI Safety &amp; Ethics</h3>
+<p><strong>Bias and Fairness:</strong> - SpreadSense AI performs
+financial analysis on objective numeric data. Narrative generation must
+not include language about the borrower’s demographic characteristics,
+geographic region as a proxy for creditworthiness, or any protected
+class characteristics. - Quarterly bias audits: review narrative samples
+for potentially discriminatory language patterns.</p>
+<p><strong>Explainability:</strong> - Every AI-extracted value links to
+a source page and bounding box in the original PDF. - Every narrative
+claim references the specific financial figure it is based on. -
+Analysts cannot submit a spread with AI-generated extractions that have
+not been reviewed.</p>
+<p><strong>Human in the Loop:</strong> - AI never approves or recommends
+approval of credit requests. All decisioning is explicitly human. - AI
+output is labeled as AI-generated in all UI surfaces and exported memos.
+- Analyst override of any AI output is always available.</p>
+<p><strong>Data Handling:</strong> - Uploaded PDFs and extracted data
+are customer-owned and never used for model training without explicit
+consent. - AI API calls transmit only the minimum necessary financial
+data (no PII beyond company name).</p>
+<hr />
+<h2 id="technical-architecture">9. Technical Architecture</h2>
+<h3 id="system-overview">9.1 System Overview</h3>
+<pre><code>┌─────────────────────────────────────────────────┐
+│                    Frontend                      │
+│  React 18 + TypeScript + Vite + Tailwind CSS    │
+│  React Query v5 · React Router v6               │
+│  Port 5174 (dev)                                │
+└─────────────────────┬───────────────────────────┘
+                      │ HTTP/REST
+┌─────────────────────▼───────────────────────────┐
+│                    Backend                       │
+│  Python 3.12 · FastAPI · SQLAlchemy (async)     │
+│  Pydantic v2 · Alembic migrations               │
+│  Port 8001                                      │
+│                                                  │
+│  Modules:                                        │
+│  ├── auth         JWT validation + user context  │
+│  ├── borrowers    Borrower CRUD                  │
+│  ├── spreads      Spread + period + line items   │
+│  ├── analytics    Ratio calc + breach detection  │
+│  ├── narrative    AI narrative generation        │
+│  ├── memo         Credit memo meta + PDF export  │
+│  └── portfolio    Dashboard aggregation          │
+└──────┬─────────────────────────────┬────────────┘
+       │                             │
+┌──────▼──────┐              ┌───────▼────────┐
+│ PostgreSQL  │              │   Claude API   │
+│ Port 5432   │              │ (Anthropic)    │
+└─────────────┘              └────────────────┘</code></pre>
+<h3 id="data-model-core-entities">9.2 Data Model (Core Entities)</h3>
+<pre><code>users ──&lt; spreads &gt;── borrowers
+             │
+             ├── spread_periods
+             │         └── spread_line_items
+             │
+             ├── narrative_versions
+             │
+             └── credit_memo_meta</code></pre>
+<h3 id="api-design">9.3 API Design</h3>
+<p>All endpoints follow RESTful conventions. Key routes:</p>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 22%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET/POST</td>
+<td><code>/borrowers/</code></td>
+<td>List / create borrowers</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/borrowers/{id}</code></td>
+<td>Get / update borrower</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/spreads/</code></td>
+<td>List / create spreads (filterable by borrower_id)</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/spreads/{id}</code></td>
+<td>Get / update spread</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/spreads/{id}/extract</code></td>
+<td>Trigger AI extraction from uploaded PDF</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/spreads/{id}/periods</code></td>
+<td>List / add periods</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/spreads/{id}/analytics</code></td>
+<td>Get calculated ratios + breach alerts</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/spreads/{id}/narrative</code></td>
+<td>Get / regenerate AI narrative</td>
+</tr>
+<tr>
+<td>GET/PUT</td>
+<td><code>/spreads/{id}/memo/meta</code></td>
+<td>Get / upsert memo metadata</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/spreads/{id}/memo/pdf</code></td>
+<td>Export credit memo PDF</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/portfolio/summary</code></td>
+<td>Portfolio dashboard data (role-gated)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure">9.4 Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>v1 (Development)</th>
+<th>v1 (Production)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend hosting</td>
+<td>Vite dev server</td>
+<td>Vercel / Cloudflare Pages</td>
+</tr>
+<tr>
+<td>Backend hosting</td>
+<td>Docker (local)</td>
+<td>Railway / Render</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL 15 (Docker)</td>
+<td>Supabase / Neon</td>
+</tr>
+<tr>
+<td>File storage</td>
+<td>Local disk</td>
+<td>AWS S3 / Supabase Storage</td>
+</tr>
+<tr>
+<td>AI API</td>
+<td>Anthropic Claude API</td>
+<td>Anthropic Claude API</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>JWT (custom)</td>
+<td>Supabase Auth (planned)</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>None (v0)</td>
+<td>GitHub Actions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="data-requirements">10. Data Requirements</h2>
+<h3 id="training-evaluation-data">10.1 Training &amp; Evaluation
+Data</h3>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Source</th>
+<th>Size</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Financial statement PDFs (labeled)</td>
+<td>Internal bank samples (anonymized)</td>
+<td>500+ documents</td>
+<td>Extraction accuracy evaluation</td>
+</tr>
+<tr>
+<td>Line item normalization corpus</td>
+<td>RMA taxonomy + internal</td>
+<td>10,000+ entries</td>
+<td>Normalization dictionary + fine-tune eval</td>
+</tr>
+<tr>
+<td>Analyst-corrected spreads</td>
+<td>Production (with consent)</td>
+<td>Ongoing</td>
+<td>Continuous extraction improvement</td>
+</tr>
+<tr>
+<td>Credit narratives (labeled quality)</td>
+<td>Senior analyst review</td>
+<td>200+ narratives</td>
+<td>Narrative quality evaluation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-retention">10.2 Data Retention</h3>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 29%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Data Type</th>
+<th>Retention</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Uploaded PDFs</td>
+<td>7 years</td>
+<td>Bank examination requirements</td>
+</tr>
+<tr>
+<td>Spread line items + ratios</td>
+<td>7 years</td>
+<td>Credit file requirements</td>
+</tr>
+<tr>
+<td>AI extraction logs</td>
+<td>3 years</td>
+<td>Model debugging + audit</td>
+</tr>
+<tr>
+<td>AI call logs (prompt/response)</td>
+<td>1 year</td>
+<td>Prompt versioning + compliance</td>
+</tr>
+<tr>
+<td>Narrative versions</td>
+<td>Indefinite</td>
+<td>Audit trail</td>
+</tr>
+<tr>
+<td>User activity logs</td>
+<td>3 years</td>
+<td>Compliance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-privacy">10.3 Data Privacy</h3>
+<ul>
+<li>PDFs are encrypted at rest (AES-256) and in transit (TLS 1.3)</li>
+<li>No PII beyond business entity names transmitted to Claude API</li>
+<li>Multi-tenant data isolation via <code>user_id</code> on all
+tables</li>
+<li>Data residency: US-based storage in v1 (international expansion =
+future consideration)</li>
+</ul>
+<hr />
+<h2 id="security-compliance">11. Security &amp; Compliance</h2>
+<h3 id="authentication-authorization">11.1 Authentication &amp;
+Authorization</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Control</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentication</td>
+<td>JWT with RS256 signing; 1-hour access token, 7-day refresh</td>
+</tr>
+<tr>
+<td>Authorization</td>
+<td>Role-based: <code>credit_analyst</code> &lt;
+<code>sr_credit_analyst</code> &lt; <code>admin</code></td>
+</tr>
+<tr>
+<td>Data isolation</td>
+<td>All queries include <code>user_id</code> or role-based filter;
+ORM-level enforcement</td>
+</tr>
+<tr>
+<td>API gateway</td>
+<td>All AI calls proxied through backend; no API keys exposed to
+frontend</td>
+</tr>
+</tbody>
+</table>
+<h3 id="compliance-considerations">11.2 Compliance Considerations</h3>
+<ul>
+<li><strong>BSA/AML</strong>: SpreadSense AI is an analytical tool and
+does not perform origination decisions. Customer Due Diligence (CDD)
+responsibility remains with the institution.</li>
+<li><strong>Fair Lending (ECOA/FHA)</strong>: AI narratives must not
+incorporate protected class characteristics. Annual disparate impact
+analysis recommended.</li>
+<li><strong>SOC 2 Type II</strong>: Target certification within 12
+months of GA launch.</li>
+<li><strong>Bank Examination Readiness</strong>: All AI interventions
+logged with prompt version, input hash, and output; examiners can
+request extraction confidence scores and source document
+references.</li>
+</ul>
+<hr />
+<h2 id="success-metrics-okrs">12. Success Metrics &amp; OKRs</h2>
+<h3 id="objective-dramatically-reduce-analyst-time-to-spread">12.1
+Objective: Dramatically reduce analyst time-to-spread</h3>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 15%" />
+<col style="width: 46%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key Result</th>
+<th>Baseline</th>
+<th>Target (6 months post-launch)</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KR1: Avg time to complete spread (AI-assisted)</td>
+<td>4h (manual)</td>
+<td>≤1.5h</td>
+<td>In-product timing telemetry</td>
+</tr>
+<tr>
+<td>KR2: AI extraction acceptance rate</td>
+<td>N/A</td>
+<td>≥80%</td>
+<td>Accepted / total extracted items</td>
+</tr>
+<tr>
+<td>KR3: Spreads completed per analyst per week</td>
+<td>2–3</td>
+<td>6–8</td>
+<td>Production DB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="objective-improve-credit-analysis-quality-and-consistency">12.2
+Objective: Improve credit analysis quality and consistency</h3>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 15%" />
+<col style="width: 46%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key Result</th>
+<th>Baseline</th>
+<th>Target (6 months post-launch)</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KR4: Ratio calculation accuracy</td>
+<td>Varies (manual)</td>
+<td>100% (automated)</td>
+<td>Automated test suite</td>
+</tr>
+<tr>
+<td>KR5: Breach detection accuracy</td>
+<td>Manual / inconsistent</td>
+<td>100% vs known covenant set</td>
+<td>Regression tests</td>
+</tr>
+<tr>
+<td>KR6: Narrative factual accuracy</td>
+<td>N/A</td>
+<td>≥98%</td>
+<td>Post-generation validation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="objective-achieve-product-market-fit">12.3 Objective: Achieve
+product-market fit</h3>
+<table>
+<thead>
+<tr>
+<th>Key Result</th>
+<th>Baseline</th>
+<th>Target (6 months post-launch)</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KR7: Weekly active analysts</td>
+<td>0</td>
+<td>≥10</td>
+<td>Auth logs</td>
+</tr>
+<tr>
+<td>KR8: NPS score</td>
+<td>N/A</td>
+<td>≥40</td>
+<td>Quarterly survey</td>
+</tr>
+<tr>
+<td>KR9: Spreads per month</td>
+<td>0</td>
+<td>≥100</td>
+<td>Production DB</td>
+</tr>
+<tr>
+<td>KR10: Memo PDF exports per month</td>
+<td>0</td>
+<td>≥50</td>
+<td>Export logs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="risks-mitigations">13. Risks &amp; Mitigations</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 33%" />
+<col style="width: 20%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI extraction errors cause analyst to trust incorrect data</td>
+<td>Medium</td>
+<td>High</td>
+<td>Confidence score UI; require review before submit; audit trail;
+holdout accuracy testing</td>
+</tr>
+<tr>
+<td>Model hallucination in narratives produces incorrect financial
+figures</td>
+<td>Low</td>
+<td>High</td>
+<td>Post-generation validation regex; figure-to-source-data linkage;
+analyst review required</td>
+</tr>
+<tr>
+<td>Claude API rate limits during peak spreading periods</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Request queue with backoff; caching of extraction results;
+user-facing status feedback</td>
+</tr>
+<tr>
+<td>Data breach exposing confidential financial statements</td>
+<td>Low</td>
+<td>Critical</td>
+<td>AES-256 encryption; VPC isolation; regular penetration testing;
+zero-trust networking</td>
+</tr>
+<tr>
+<td>Regulatory pushback on AI in credit decisions</td>
+<td>Low</td>
+<td>High</td>
+<td>Explicit human-in-the-loop design; AI never makes or recommends
+decisions; full audit trail</td>
+</tr>
+<tr>
+<td>Analyst adoption resistance (change management)</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Training materials; side-by-side comparison mode; quick wins
+(extraction speed demo)</td>
+</tr>
+<tr>
+<td>Claude API pricing increases materially</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Optimize prompt efficiency; implement caching for repeated
+extractions; evaluate open-source alternatives</td>
+</tr>
+<tr>
+<td>Financial statement format diversity causes extraction failures</td>
+<td>High</td>
+<td>Medium</td>
+<td>Broad format testing; graceful degradation to manual entry;
+continuous extraction improvement pipeline</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="launch-plan-milestones">14. Launch Plan &amp; Milestones</h2>
+<h3 id="phase-1-foundation-completed-q1-2026">Phase 1: Foundation
+(Completed — Q1 2026)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Core data model: users,
+borrowers, spreads, periods, line items</label></li>
+<li><label><input type="checkbox" checked="" />Authentication (JWT) and
+role-based access control</label></li>
+<li><label><input type="checkbox" checked="" />Manual spread entry
+UI</label></li>
+<li><label><input type="checkbox" checked="" />Ratio calculation engine
+(DSCR, leverage, liquidity, coverage)</label></li>
+<li><label><input type="checkbox" checked="" />Breach detection with
+configurable thresholds</label></li>
+<li><label><input type="checkbox" checked="" />Analytics KPI strip in
+spread detail view</label></li>
+</ul>
+<h3 id="phase-2-ai-integration-completed-q1q2-2026">Phase 2: AI
+Integration (Completed — Q1/Q2 2026)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Claude API integration
+for PDF extraction</label></li>
+<li><label><input type="checkbox" checked="" />Line item normalization
+(rule-based + AI fallback)</label></li>
+<li><label><input type="checkbox" checked="" />AI narrative
+generation</label></li>
+<li><label><input type="checkbox" checked="" />Narrative edit and
+version history</label></li>
+<li><label><input type="checkbox" checked="" />Credit memo metadata
+form</label></li>
+<li><label><input type="checkbox" checked="" />PDF export (WeasyPrint,
+Jinja2 template)</label></li>
+<li><label><input type="checkbox" checked="" />Review workflow: status
+machine (draft→completed→reviewed→exported)</label></li>
+<li><label><input type="checkbox" checked="" />Audit history log with
+transition timeline UI</label></li>
+<li><label><input type="checkbox" checked="" />Status filter tabs on
+deal dashboard</label></li>
+</ul>
+<h3 id="phase-3-navigation-portfolio-completed-q2-2026">Phase 3:
+Navigation &amp; Portfolio (Completed — Q2 2026)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Collapsible left sidebar
+navigation</label></li>
+<li><label><input type="checkbox" checked="" />Borrower list page with
+spread counts</label></li>
+<li><label><input type="checkbox" checked="" />Borrower overview
+page</label></li>
+<li><label><input type="checkbox" checked="" />Borrower create/edit
+forms</label></li>
+<li><label><input type="checkbox" checked="" />Portfolio dashboard
+(sr/admin roles)</label></li>
+<li><label><input type="checkbox" checked="" />Breach alert summary
+cards</label></li>
+<li><label><input type="checkbox" checked="" />Enriched deal table with
+filters</label></li>
+</ul>
+<h3 id="phase-4-production-readiness-in-progress-q3-2026">Phase 4:
+Production Readiness (In Progress — Q3 2026)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Supabase Auth migration (OAuth /
+SSO)</label></li>
+<li><label><input type="checkbox" />File storage migration to
+S3/Supabase Storage</label></li>
+<li><label><input type="checkbox" checked="" />PDF upload UI with
+real-time per-statement progress tracking (ExtractionPanel — async
+BackgroundTask pipeline, phase column, 2s polling)</label></li>
+<li><label><input type="checkbox" checked="" />Extraction confidence
+score UI (color-coded review queue — HIGH/MED/LOW tiers, inline override
+inputs, sorted by confidence ascending)</label></li>
+<li><label><input type="checkbox" checked="" /><strong>First production
+deployment</strong> (May 3, 2026) — Frontend on Vercel, FastAPI backend
+on Railway, Postgres on Neon. Public URL:
+https://spreadsense.vercel.app</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Real SEC 10-K
+extraction validated end-to-end</strong> — DocuSign FY2026 10-K (157
+pages, 392k chars) yielded 23/33 non-null fields with HIGH confidence in
+&lt;30 seconds</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Smart
+financial-statements section slicing</strong> — Regex-locates the
+consolidated statements block and sends only the relevant 100k-char
+window to Claude (~75% token cost reduction vs naive
+truncation)</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Image-based PDF
+guard</strong> — Fast-fails with a clear error when PyMuPDF extracts
+&lt;200 chars, instead of silently returning all-null</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Test
+infrastructure hardening</strong> — Dedicated test database,
+savepoint-based isolation so application commits don’t pollute the test
+transaction (75/75 tests passing)</label></li>
+<li><label><input type="checkbox" checked="" /><strong>CI on every
+push</strong> — GitHub Actions runs backend pytest (with ephemeral
+Postgres) plus frontend <code>tsc --noEmit</code> and production
+build</label></li>
+<li><label><input type="checkbox" checked="" />SEC EDGAR fetcher: pull
+latest 10-K / 10-Q for any public ticker directly inside
+ExtractionPanel.</label></li>
+<li><label><input type="checkbox" checked="" /><strong>AI variance
+commentary</strong> (May 5, 2026) —
+<code>POST /spreads/{id}/variance-commentary</code> endpoint and
+Analytics-tab card. Claude Sonnet 4.5 reads two periods of structured
+line items + ratios, returns 4–6 categorized bullets (revenue / margins
+/ liquidity / leverage / working_capital / watch) ending with a
+forward-looking credit-risk watchpoint. ~10–15s end-to-end.</label></li>
+<li><label><input type="checkbox"
+checked="" /><strong>Ask-the-Filing</strong> (May 5, 2026) —
+<code>POST /spreads/{id}/ask</code> endpoint and Q&amp;A card on the
+KPIs tab. Persists the full extracted document text on
+<code>extraction_jobs</code> (migration 0002), then answers free-text
+questions with a source-section hint (e.g. “Item 1A — Risk Factors”,
+“Note 8 — Debt”). Strictly grounded — refuses to answer outside the
+document.</label></li>
+<li><label><input type="checkbox" checked="" /><strong>QuickBooks Online
+connector — demo stub</strong> (May 5, 2026) —
+<code>POST /quickbooks/spreads/{spread_id}/periods/{period_id}/import</code>
+writes a fixed 27-line trial balance for an “Acme Manufacturing (Demo
+Sandbox)” entity to demonstrate the direct-accounting-system pattern.
+Real OAuth + token store + COA mapping is v2 (target Q3 2026); router
+contract is stable.</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Excel
+export</strong> (May 5, 2026) —
+<code>GET /spreads/{id}/export.xlsx</code> returns an <code>.xlsx</code>
+workbook with one sheet per statement (IS / BS / CF), period columns
+side-by-side, indigo header band, total-row highlighting, and accounting
+number format. openpyxl backend; banner with borrower + deal name.
+Bank-branded layout deferred.</label></li>
+<li><label><input type="checkbox" checked="" /><strong>Reopen workflow
+transition</strong> (May 5, 2026) — <code>completed → draft</code>
+allowed for owner-analyst, sr_credit_analyst, admin. Frontend renders
+Reopen as a secondary button alongside the primary forward action.
+State-machine forward-only assumption removed; reviewer-rejection use
+case now supported.</label></li>
+<li><label><input type="checkbox" />AI call logging + audit
+table</label></li>
+<li><label><input type="checkbox" />User management admin
+panel</label></li>
+<li><label><input type="checkbox" />Performance testing (50 concurrent
+users)</label></li>
+<li><label><input type="checkbox" />SOC 2 controls implementation
+begins</label></li>
+</ul>
+<h3 id="phase-5-ga-launch-growth-target-q4-2026">Phase 5: GA Launch
+&amp; Growth (Target — Q4 2026)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Multi-institution tenant
+isolation</label></li>
+<li><label><input type="checkbox" />LOS integration (Finastra, nCino) —
+API only</label></li>
+<li><label><input type="checkbox" />Batch spreading (multiple PDFs in
+queue)</label></li>
+<li><label><input type="checkbox" />Custom covenant threshold
+configuration UI</label></li>
+<li><label><input type="checkbox" />Mobile-responsive layout
+improvements</label></li>
+<li><label><input type="checkbox" />SOC 2 Type II audit</label></li>
+</ul>
+<hr />
+<h2 id="open-questions">15. Open Questions</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 17%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Question</th>
+<th>Owner</th>
+<th>Target Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OQ-01</td>
+<td>What is the target institution size? Community banks (assets
+&lt;$1B) or mid-size ($1B–$10B)? This affects compliance requirements
+and pricing model.</td>
+<td>Product</td>
+<td>Q2 2026</td>
+</tr>
+<tr>
+<td>OQ-02</td>
+<td>Should extraction results be cacheable across institutions for the
+same public financial statement (e.g., SEC filings)? Requires careful
+data privacy analysis.</td>
+<td>Eng + Legal</td>
+<td>Q3 2026</td>
+</tr>
+<tr>
+<td>OQ-03</td>
+<td>Is there appetite for a fine-tuned extraction model
+vs. general-purpose Claude? Fine-tuning could improve accuracy 5–10% but
+adds significant MLOps overhead.</td>
+<td>Eng</td>
+<td>Q3 2026</td>
+</tr>
+<tr>
+<td>OQ-04</td>
+<td>What is the pricing model? Per-spread, per-seat, or enterprise
+contract? Affects AI API cost management strategy.</td>
+<td>Product</td>
+<td>Q2 2026</td>
+</tr>
+<tr>
+<td>OQ-05</td>
+<td>Should narrative generation support institutional “voice”
+customization (e.g., inject institution-specific boilerplate or risk
+appetite language)?</td>
+<td>Product</td>
+<td>Q3 2026</td>
+</tr>
+<tr>
+<td>OQ-06</td>
+<td>How should the system handle tax-basis vs GAAP adjustments? Some
+institutions require explicit normalization steps.</td>
+<td>Credit SME</td>
+<td>Q2 2026</td>
+</tr>
+<tr>
+<td>OQ-07</td>
+<td>Is real-time collaboration (multiple analysts on same spread
+simultaneously) in scope for v2?</td>
+<td>Product</td>
+<td>Q3 2026</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix">16. Appendix</h2>
+<h3 id="a.-glossary">A. Glossary</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Spreading</strong></td>
+<td>The process of extracting and organizing financial statement data
+into a standardized format for credit analysis</td>
+</tr>
+<tr>
+<td><strong>RMA</strong></td>
+<td>Risk Management Association — provides industry-standard financial
+statement spreading templates and industry benchmarks</td>
+</tr>
+<tr>
+<td><strong>UCA Cash Flow</strong></td>
+<td>Uniform Credit Analysis Cash Flow — standardized methodology for
+calculating operating cash flow used by US bank regulators</td>
+</tr>
+<tr>
+<td><strong>DSCR</strong></td>
+<td>Debt Service Coverage Ratio — measures a borrower’s ability to cover
+debt payments from operating cash flow (DSCR = NOI / Debt Service)</td>
+</tr>
+<tr>
+<td><strong>Covenant</strong></td>
+<td>A contractual obligation in a loan agreement; financial covenants
+require maintaining specific ratio thresholds</td>
+</tr>
+<tr>
+<td><strong>Breach</strong></td>
+<td>When a financial ratio falls outside an agreed covenant
+threshold</td>
+</tr>
+<tr>
+<td><strong>Credit Memo</strong></td>
+<td>A formal document summarizing a credit request and analysis,
+presented to the credit committee for approval</td>
+</tr>
+<tr>
+<td><strong>LOS</strong></td>
+<td>Loan Origination System — core banking software managing the loan
+application and approval process</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b.-competitor-landscape">B. Competitor Landscape</h3>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 15%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr>
+<th>Competitor</th>
+<th>Focus</th>
+<th>Key Gap vs. SpreadSense AI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Moody’s CreditLens</td>
+<td>Enterprise, large banks</td>
+<td>Not AI-native; complex UI; expensive</td>
+</tr>
+<tr>
+<td>Baker Hill NextGen</td>
+<td>Community banking</td>
+<td>Legacy architecture; no AI extraction</td>
+</tr>
+<tr>
+<td>Sageworks (Abrigo)</td>
+<td>SME lending</td>
+<td>Weak AI narrative; no vision extraction</td>
+</tr>
+<tr>
+<td>Numerated</td>
+<td>Digital lending</td>
+<td>Consumer-focused; no spreading workflow</td>
+</tr>
+<tr>
+<td>Manual (Excel)</td>
+<td>Ubiquitous</td>
+<td>No AI; no audit trail; error-prone</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c.-related-documents">C. Related Documents</h3>
+<ul>
+<li>Plan 4: PDF Credit Memo Export Design Spec
+(<code>docs/superpowers/specs/2026-04-18-spreadsense-plan-4-pdf-credit-memo-design.md</code>)</li>
+<li>Plan 5: Workflow Design Spec
+(<code>docs/superpowers/specs/2026-04-18-spreadsense-plan-5-workflow-design.md</code>)</li>
+<li>Plan 6: Dashboard &amp; Reporting
+(<code>docs/superpowers/plans/2026-04-19-plan-6-dashboard-reporting.md</code>)</li>
+<li>Plan 7: Navigation &amp; Layout
+(<code>docs/superpowers/plans/2026-04-19-plan-7-navigation-layout.md</code>)</li>
+</ul>
+<hr />
+<p><em>SpreadSense AI PRD v1.0 — April 19, 2026 — Arun Rajendiran</em>
+<em>Document generated with AI assistance (Claude Sonnet 4.6). All
+strategic decisions and requirements reflect human judgment.</em></p>
+</body>
+</html>

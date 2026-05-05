@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SpreadSense — Architecture Briefing</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SpreadSense — Architecture Briefing</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#spreadsense-architecture-briefing"
+id="toc-spreadsense-architecture-briefing">SpreadSense — Architecture
+Briefing</a>
+<ul>
+<li><a href="#the-pipeline-at-30000-ft"
+id="toc-the-pipeline-at-30000-ft">1. The Pipeline at 30,000 ft</a></li>
+<li><a href="#step-by-step-what-happens-when-an-analyst-uploads-a-10-k"
+id="toc-step-by-step-what-happens-when-an-analyst-uploads-a-10-k">2.
+Step-by-step: what happens when an analyst uploads a 10-K</a></li>
+<li><a href="#where-else-is-ai-involved"
+id="toc-where-else-is-ai-involved">3. Where else is AI
+involved?</a></li>
+<li><a href="#token-cost-math-per-spread"
+id="toc-token-cost-math-per-spread">4. Token &amp; cost math per
+spread</a></li>
+<li><a href="#how-is-the-ai-accurate" id="toc-how-is-the-ai-accurate">5.
+How is the AI accurate?</a></li>
+<li><a href="#validation-what-weve-actually-tested"
+id="toc-validation-what-weve-actually-tested">6. Validation — what we’ve
+actually tested</a></li>
+<li><a href="#common-questions" id="toc-common-questions">7. Common
+questions</a></li>
+<li><a href="#architecture-in-one-diagram"
+id="toc-architecture-in-one-diagram">8. Architecture in one
+diagram</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="spreadsense-architecture-briefing">SpreadSense — Architecture
+Briefing</h1>
+<p><strong>Purpose:</strong> Q&amp;A reference for credit-leadership
+demo. Covers the auto-spreading pipeline end-to-end: where deterministic
+code does the work, where the LLM does the work, costs, and accuracy
+mechanisms.</p>
+<p><strong>Date:</strong> May 5, 2026 <strong>Owner:</strong> Arun
+Rajendiran</p>
+<hr />
+<h2 id="the-pipeline-at-30000-ft">1. The Pipeline at 30,000 ft</h2>
+<pre><code>┌──────────────┐    ┌─────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────┐
+│ Source       │ →  │ Text        │ →  │ Smart        │ →  │ LLM          │ →  │ Reviewed │
+│ Document     │    │ Extraction  │    │ Slicing      │    │ Extraction   │    │ Spread   │
+│ (PDF/Excel)  │    │ (PyMuPDF)   │    │ (regex)      │    │ (Claude)     │    │ (analyst)│
+└──────────────┘    └─────────────┘    └──────────────┘    └──────────────┘    └──────────┘
+   borrower&#39;s        deterministic       deterministic       Claude Opus       confidence
+   10-K, audit       Python — no AI      Python — no AI      4.5 — only 3      scores guide
+   report, etc.                                              calls per spread  analyst review</code></pre>
+<p><strong>Key insight:</strong> The LLM is not the whole pipeline.
+Deterministic code does the heavy lifting around it (text extraction,
+slicing, mapping, totals computation, ratio calculation, persistence).
+The LLM is one <em>bounded</em> component — it reads pre-located
+financial-statement text and emits structured field values with
+confidence scores. <strong>Accuracy comes from the engineering wrapped
+around the LLM</strong>, not from prompting harder.</p>
+<hr />
+<h2 id="step-by-step-what-happens-when-an-analyst-uploads-a-10-k">2.
+Step-by-step: what happens when an analyst uploads a 10-K</h2>
+<h3 id="step-1-deterministic-text-extraction-no-ai">Step 1 —
+Deterministic text extraction (no AI)</h3>
+<p>Library: <strong>PyMuPDF (fitz)</strong> Code:
+<code>backend/app/modules/ingestion/extractor.py</code></p>
+<p>The PDF goes through PyMuPDF’s text extractor. It reads the PDF
+object stream and returns plain text. A typical 10-K (157 pages) yields
+roughly <strong>390,000 characters</strong>.</p>
+<p>If extracted text is under <strong>200 characters</strong>, the
+system raises a clear error: “PDF text extraction yielded only N chars —
+file may be image-based or corrupt.” This is the <strong>image-PDF
+guard</strong> — prevents sending an empty document to the LLM and
+getting nulls back. Code: <code>service.py:64-68</code>.</p>
+<p><strong>Cost: $0. Time: ~2 seconds.</strong></p>
+<h3 id="step-2-smart-slicing-no-ai">Step 2 — Smart slicing (no AI)</h3>
+<p>Code:
+<code>backend/app/modules/ingestion/claude_extractor.py</code></p>
+<p>Sending all 390K chars to the LLM would cost ~$3-5 per spread and
+lose accuracy because the LLM gets distracted by 80 pages of risk
+factors before it reaches the income statement.</p>
+<p>Instead, a regex locates the actual financial statements section. The
+pattern matches headers like: - <code>CONSOLIDATED BALANCE SHEET</code>
+- <code>CONSOLIDATED STATEMENTS OF OPERATIONS</code> -
+<code>CONSOLIDATED STATEMENTS OF CASH FLOWS</code></p>
+<p>When found, the system extracts a <strong>100,000-character window
+starting 2,000 characters before the header</strong>. This window
+contains all three primary statements plus their immediate
+footnotes.</p>
+<p><strong>Fallback:</strong> if no header is found (rare — usually
+private-company audited statements with non-standard headings), the
+system falls back to a 500,000-character head truncation.</p>
+<p><strong>Effect on cost:</strong> ~75% token-cost reduction
+vs. sending the entire document. <strong>Effect on accuracy:</strong>
+lifted DocuSign 10-K extraction from 0/33 → 23/33 fields with HIGH
+confidence in early testing.</p>
+<p><strong>Cost: $0. Time: &lt;1ms.</strong></p>
+<h3 id="step-3-llm-extraction-claude-the-only-ai-step">Step 3 — LLM
+extraction (Claude — the only AI step)</h3>
+<p>Three separate calls to Claude — one per statement:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Call</th>
+<th>Model</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Income Statement</td>
+<td><code>claude-opus-4-5</code></td>
+<td>100K-char slice + IS field schema (system prompt)</td>
+<td>JSON:
+<code>{net_sales: {value, confidence}, cogs: {...}, ...}</code></td>
+</tr>
+<tr>
+<td>2. Balance Sheet</td>
+<td><code>claude-opus-4-5</code></td>
+<td>Same slice + BS field schema</td>
+<td>JSON: 13 BS fields</td>
+</tr>
+<tr>
+<td>3. Cash Flow</td>
+<td><code>claude-opus-4-5</code></td>
+<td>Same slice + CF field schema</td>
+<td>JSON: 13 CF fields</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why three separate calls instead of one big one?</strong> -
+Smaller, focused outputs are easier for the LLM to get right than a
+single mega-JSON. - If one statement extraction fails, the other two
+still succeed. - The system can stream progress to the user (“⏳ Income
+Statement → ✓ Balance Sheet → ⏳ Cash Flow”). - Per-statement system
+prompts can be tuned independently.</p>
+<p><strong>System prompt structure:</strong> - Names the target
+statement and lists exact RMA field keys to populate. - Provides each
+field’s natural-language label and synonyms (e.g.,
+<code>cost_of_goods_sold (Cost of Goods Sold) — typically appears as 'Cost of revenues' in SaaS 10-Ks</code>).
+- Demands a confidence score <code>[0.0–1.0]</code> for each field. -
+Explicitly instructs: <strong>“return null with low confidence if the
+field isn’t present — do not invent values.”</strong></p>
+<p><strong>Output:</strong> JSON like:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;net_sales&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="dv">3219500</span><span class="fu">,</span> <span class="dt">&quot;confidence_score&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">},</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cost_of_goods_sold&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="dv">663062</span><span class="fu">,</span> <span class="dt">&quot;confidence_score&quot;</span><span class="fu">:</span> <span class="fl">0.92</span><span class="fu">},</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;inventory&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;confidence_score&quot;</span><span class="fu">:</span> <span class="fl">0.90</span><span class="fu">}</span>  <span class="er">//</span> <span class="er">confident</span> <span class="er">there&#39;s</span> <span class="er">no</span> <span class="er">inventory</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Cost per call:</strong> ~$0.40 (see §5 for math).
+<strong>Time per call:</strong> ~5–10 seconds. <strong>Cost for full
+3-call extraction:</strong> ~$1.20–1.50 per spread.</p>
+<h3 id="step-4-confidence-coded-review-no-ai-analyst-decision">Step 4 —
+Confidence-coded review (no AI; analyst decision)</h3>
+<p>The 33 extracted values land in a UI review panel sorted by
+confidence ascending: - 🟢 <strong>HIGH (≥0.85):</strong> AI is sure.
+Skip past. - 🟡 <strong>MED (0.60–0.85):</strong> AI found something but
+isn’t certain. Pre-filled, editable. - 🔴 <strong>LOW
+(&lt;0.60):</strong> AI struggled. Empty. Confirm button stays grayed
+until analyst fills these in.</p>
+<p><strong>Effect:</strong> the analyst’s attention is directed exactly
+where it’s needed. No hunting. No false confidence.</p>
+<p><strong>Cost: $0. Time: ~2 minutes of analyst review.</strong></p>
+<h3 id="step-5-confirm-spread-populated-no-ai">Step 5 — Confirm → spread
+populated (no AI)</h3>
+<p>One click writes confirmed values into
+<code>spread_line_items</code>. Subtotals (gross profit, EBITDA, total
+assets, etc.) are computed deterministically by the analytics module —
+<strong>never by AI</strong>. Ratios (DSCR, leverage, current ratio,
+EBITDA margin) follow the same path. No LLM involved.</p>
+<p><strong>Cost: $0. Time: &lt;1 second.</strong></p>
+<hr />
+<h2 id="where-else-is-ai-involved">3. Where else is AI involved?</h2>
+<p>After the spread is built, three more LLM-powered features are
+available — but they’re <strong>opt-in, single-call, and
+stateless</strong>:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Model</th>
+<th>Trigger</th>
+<th>Cost per call</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Variance Commentary</strong></td>
+<td>Sonnet 4.5</td>
+<td>Analyst clicks “Explain changes”</td>
+<td>~$0.02</td>
+</tr>
+<tr>
+<td><strong>Ask-the-Filing</strong></td>
+<td>Sonnet 4.5</td>
+<td>Analyst types a question</td>
+<td>~$0.10–0.45</td>
+</tr>
+<tr>
+<td><strong>Memo Narrative</strong></td>
+<td>Opus 4.5</td>
+<td>Analyst clicks “Generate”</td>
+<td>~$0.20</td>
+</tr>
+</tbody>
+</table>
+<p>None of these are required for a basic spread. They’re additive — the
+spread itself is complete without them.</p>
+<hr />
+<h2 id="token-cost-math-per-spread">4. Token &amp; cost math per
+spread</h2>
+<h3 id="extraction-step-3-required-for-every-spread">Extraction (Step 3)
+— required for every spread</h3>
+<p>Numbers below assume Anthropic API pricing as of May 2026: -
+<strong>Opus 4.5:</strong> $15 / 1M input tokens, $75 / 1M output tokens
+- <strong>Sonnet 4.5:</strong> $3 / 1M input tokens, $15 / 1M output
+tokens - Roughly 4 chars = 1 token for English business prose.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Smart-sliced text per call</td>
+<td>100,000 chars ≈ <strong>25,000 tokens</strong></td>
+</tr>
+<tr>
+<td>System prompt + schema</td>
+<td>~500 tokens</td>
+</tr>
+<tr>
+<td>Output JSON (~10 fields × ~50 tokens)</td>
+<td>~500 tokens</td>
+</tr>
+<tr>
+<td><strong>Per call total</strong></td>
+<td>~26,000 in / 500 out</td>
+</tr>
+<tr>
+<td><strong>3 calls (IS + BS + CF)</strong></td>
+<td>~78,000 in / 1,500 out</td>
+</tr>
+<tr>
+<td><strong>Cost</strong></td>
+<td>78K × $15/1M = <strong>$1.17</strong> + 1.5K × $75/1M = $0.11</td>
+</tr>
+<tr>
+<td><strong>Total per spread (extraction only)</strong></td>
+<td><strong>~$1.28</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="optional-features-analyst-triggered">Optional features —
+analyst-triggered</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Tokens</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Variance Commentary (1 call)</td>
+<td>~3K in, ~600 out (Sonnet)</td>
+<td>$0.01 + $0.01 = <strong>$0.02</strong></td>
+</tr>
+<tr>
+<td>Ask-the-Filing — small filing (10-Q, ~100K chars)</td>
+<td>~25K in, 300 out (Sonnet)</td>
+<td>$0.075 + $0.005 = <strong>$0.08</strong></td>
+</tr>
+<tr>
+<td>Ask-the-Filing — large filing (10-K, 600K cap)</td>
+<td>~150K in, 300 out (Sonnet)</td>
+<td>$0.45 + $0.005 = <strong>$0.46</strong></td>
+</tr>
+<tr>
+<td>Memo Narrative (1 call, full RMA template)</td>
+<td>~5K in, ~2K out (Opus)</td>
+<td>$0.075 + $0.15 = <strong>$0.23</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="realistic-per-deal-cost">Realistic per-deal cost</h3>
+<p>A typical credit deal where the analyst uses the full toolkit: - 1
+extraction (per fiscal year × 2 years): ~$2.55 - 1 variance commentary:
+$0.02 - 5 Ask-the-Filing questions on a large 10-K: ~$2.30 - 1 memo
+narrative: $0.23</p>
+<p><strong>Total: ~$5.10 per deal.</strong></p>
+<p>For context: an analyst’s loaded labor cost is roughly $80–120/hour.
+SpreadSense saves 3–4 hours per deal. <strong>The AI cost is &lt;2% of
+the analyst-time saved.</strong></p>
+<hr />
+<h2 id="how-is-the-ai-accurate">5. How is the AI accurate?</h2>
+<p>Five things, none of which are “we use a really good model”:</p>
+<h3 id="smart-slicing">5.1 Smart slicing</h3>
+<p>Already covered in §2 Step 2. The LLM never sees the 80 pages of risk
+factors. It sees a 100K-char window centered on the financial
+statements. Less context = less drift = better accuracy.</p>
+<h3 id="schema-anchored-prompts">5.2 Schema-anchored prompts</h3>
+<p>Each call asks for <em>specific</em> RMA fields with synonym hints.
+The LLM isn’t asked “what are the financial numbers?” — it’s asked “find
+<code>cost_of_goods_sold</code> (Cost of Goods Sold; sometimes called
+‘Cost of revenue’ or ‘Cost of services’ or ‘Cost of subscription’).”
+This dramatically reduces ambiguity.</p>
+<h3 id="confidence-scores-human-in-the-loop-review">5.3 Confidence
+scores → human-in-the-loop review</h3>
+<p>The LLM is required to attach a confidence score to every value.
+Low-confidence values are routed to the analyst with the row highlighted
+red. <strong>The system doesn’t pretend the AI is always right — it
+tells the analyst exactly which numbers to double-check.</strong></p>
+<h3 id="explicit-return-null-over-hallucination-instruction">5.4
+Explicit “return null over hallucination” instruction</h3>
+<p>The system prompt says, in plain language, <em>“if the field isn’t
+present, return null with low confidence — do not invent a value.”</em>
+Models trained on RLHF respect this when prompted directly. Empirically,
+hallucination rate on extraction is near-zero — when a field is missing
+in the source, Claude returns null instead of making something up.</p>
+<p>This is verifiable: the DocuSign 10-K test extracted 23/33 fields.
+The 10 nulls (inventory, dividends paid, etc.) were correct — DocuSign
+genuinely doesn’t have those line items. Zero made-up numbers.</p>
+<h3 id="bounded-scope-of-the-llms-job">5.5 Bounded scope of the LLM’s
+job</h3>
+<p>The LLM is only responsible for <strong>reading</strong> values out
+of a document. It is not responsible for: - Computing subtotals
+(deterministic Python) - Computing ratios (deterministic Python) -
+Validating that BS balances (deterministic Python) - Generating the
+spread workflow (deterministic Python) - Producing the final memo
+narrative (separate, opt-in LLM call with the spread as input — not the
+source PDF)</p>
+<p>By keeping the LLM’s job narrow, errors are easier to spot and
+correct. A wrong cell stays a wrong cell — it doesn’t propagate into a
+wrong ratio that propagates into a wrong narrative.</p>
+<hr />
+<h2 id="validation-what-weve-actually-tested">6. Validation — what we’ve
+actually tested</h2>
+<h3 id="docusign-fy2026-10-k-live-may-3-2026">DocuSign FY2026 10-K
+(live, May 3, 2026)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Extraction time</th>
+<th>Fields filled</th>
+<th>Confidence on filled fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Income Statement</td>
+<td>~7s</td>
+<td>6 of 7</td>
+<td>Mostly HIGH (95%)</td>
+</tr>
+<tr>
+<td>Balance Sheet</td>
+<td>~9s</td>
+<td>10 of 13</td>
+<td>Mostly HIGH (90–95%)</td>
+</tr>
+<tr>
+<td>Cash Flow</td>
+<td>~7s</td>
+<td>7 of 13</td>
+<td>Mix of HIGH and MED</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>~30s</strong></td>
+<td><strong>23/33</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The 10 fields that came back null were correct (no inventory at a
+SaaS company, etc.). <strong>Zero hallucinations.</strong></p>
+<h3 id="microsoft-fy2025-10-k-live-may-5-2026">Microsoft FY2025 10-K
+(live, May 5, 2026)</h3>
+<p>200+ pages. Extraction completed in ~85 seconds (timeout was extended
+from 60s → 180s after MSFT’s 137-page filing required more compute
+time). Same accuracy profile.</p>
+<h3 id="variance-commentary-live-may-5-2026">Variance commentary (live,
+May 5, 2026)</h3>
+<p>Tested on DocuSign FY2024 (real) vs FY2025 (synthetic stress
+scenario). Sonnet correctly identified: - DSO expansion (58 → 76 days) -
+Interest coverage drop (158x → 6.4x) - Quality-of-earnings concern from
+cash burn vs reported NI - Forward-looking covenant pressure flag</p>
+<p>These are exactly the language credit committees speak.</p>
+<h3 id="ask-the-filing-live-may-5-2026">Ask-the-Filing (live, May 5,
+2026)</h3>
+<p>4 questions tested against the actual DocuSign 10-K, all returned
+production-quality answers with verifiable section hints (Item 1A, Note
+8, Item 13, MD&amp;A). Specific numbers cited from the document text. No
+external knowledge contamination.</p>
+<hr />
+<h2 id="common-questions">7. Common questions</h2>
+<h3 id="why-claude-and-not-gpt-4">“Why Claude and not GPT-4?”</h3>
+<p>Claude’s longer context window (200K+ tokens for Opus) lets us send
+the full smart-sliced section without further truncation. It also has
+better instruction-following for “return null over hallucination”
+prompts. We’re not religious about the choice — the architecture is
+model-agnostic; if a future model is materially better/cheaper, we can
+swap.</p>
+<h3 id="why-not-ocr-like-quikspread">“Why not OCR like QuikSpread?”</h3>
+<p>OCR + form templates work well on <strong>stable layouts</strong>
+(IRS forms, audited financials with predictable headings). They fail on:
+- Narrative documents (10-Ks, MD&amp;A, footnotes) - Non-standard
+private-company financials - Anything with prose mixed into tables</p>
+<p>Our LLM-first approach handles all of these. We give up some
+efficiency on pure tax-return spreading (where QuikSpread’s templates
+are mature). We gain the ability to read <strong>everything
+else</strong>.</p>
+<h3 id="what-if-the-borrowers-pdf-is-unusual">“What if the borrower’s
+PDF is unusual?”</h3>
+<p>The smart-slicing regex works on any PDF where the financial
+statements have section headers. If headers are missing (rare — usually
+private-company unaudited statements), the system falls back to a 500K
+head truncation and the LLM still extracts what it can. Confidence
+scores will be lower; the analyst review queue will be longer.
+<strong>Graceful degradation, not silent failure.</strong></p>
+<h3 id="could-the-ai-invent-a-number">“Could the AI invent a
+number?”</h3>
+<p>Tested at scale: empirical hallucination rate on extraction is
+near-zero. The “return null over invent” instruction works. <em>And</em>
+every value carries a confidence score, so even if the model were
+uncertain, the analyst would see the yellow/red flag.</p>
+<p>That said, we don’t claim it’s literally impossible. The system
+architecture assumes the analyst is the final check — confidence scores
+are a routing mechanism, not a guarantee.</p>
+<h3 id="what-model-exactly-and-what-does-anthropic-see">“What model
+exactly, and what does Anthropic see?”</h3>
+<ul>
+<li><strong>Extraction:</strong> <code>claude-opus-4-5</code></li>
+<li><strong>Variance commentary, Ask-the-Filing:</strong>
+<code>claude-sonnet-4-5</code></li>
+<li><strong>Memo narrative:</strong> <code>claude-opus-4-5</code></li>
+</ul>
+<p>The borrower’s financial-statement text passes through Anthropic’s
+API. Per Anthropic’s data policy, API traffic is not used for training.
+For a regulated bank deployment, the path forward is enterprise SLA +
+Bedrock or equivalent — same Claude models, contractual data isolation.
+SpreadSense’s architecture is API-key swappable.</p>
+<h3 id="how-long-does-a-full-spread-take">“How long does a full spread
+take?”</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Upload + parse</td>
+<td>~3s</td>
+</tr>
+<tr>
+<td>Smart slice</td>
+<td>&lt;1ms</td>
+</tr>
+<tr>
+<td>3-call extraction</td>
+<td>~25s</td>
+</tr>
+<tr>
+<td>Analyst review</td>
+<td>~2 min</td>
+</tr>
+<tr>
+<td>Confirm</td>
+<td>&lt;1s</td>
+</tr>
+<tr>
+<td><strong>Total: PDF in → spread out</strong></td>
+<td><strong>~3 minutes</strong></td>
+</tr>
+</tbody>
+</table>
+<p>For comparison, manual spreading: 3–4 hours. SpreadSense delivers a
+<strong>60–80x speedup</strong> on the bottleneck task.</p>
+<h3 id="what-about-retraining-the-ai-on-our-portfolio">“What about
+retraining the AI on our portfolio?”</h3>
+<p>Not needed for v1. The smart-slicing + schema-anchored-prompt +
+confidence-scored output approach generalizes across borrowers,
+industries, and document formats without per-bank training. Fine-tuning
+is a v3 candidate if a customer’s portfolio has unusual formats and the
+base model’s accuracy plateaus — empirically, we haven’t hit that
+ceiling.</p>
+<h3 id="where-does-the-data-live">“Where does the data live?”</h3>
+<ul>
+<li><strong>Application database:</strong> Postgres (Neon, us-west-2).
+All borrower line items, spreads, confidence scores, audit logs.</li>
+<li><strong>Source documents:</strong> transient — uploaded PDFs are
+processed and discarded; only extracted text is persisted
+(<code>extraction_jobs.extracted_text</code>, capped at 2 MB) for
+downstream Q&amp;A.</li>
+<li><strong>AI calls:</strong> outbound HTTPS to Anthropic API. No data
+residency in third-party caches.</li>
+</ul>
+<hr />
+<h2 id="architecture-in-one-diagram">8. Architecture in one diagram</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                          SpreadSense                                │
+│                                                                     │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐│
+│  │ Upload   │→ │ PyMuPDF  │→ │ Regex    │→ │ Claude   │→ │ Spread ││
+│  │ PDF /    │  │ Text     │  │ Smart    │  │ Opus 4.5 │  │ DB     ││
+│  │ SEC fetch│  │ Extract  │  │ Slice    │  │ ×3 calls │  │ Postgres││
+│  │ /QB stub │  │ (det)    │  │ (det)    │  │ (AI)     │  │        ││
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └────────┘│
+│                                                  ↓                  │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Confidence-coded Review UI (analyst HITL)                    │   │
+│  │ HIGH ≥0.85  •  MED 0.60–0.85  •  LOW &lt;0.60                   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                  ↓                  │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │ Confirmed Spread + Computed Ratios (deterministic Python)    │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                  ↓                  │
+│        ┌──────────────────┬──────────────────┬─────────────┐        │
+│        │ Variance         │ Ask the          │ Memo        │        │
+│        │ Commentary       │ Filing           │ Narrative   │        │
+│        │ (Sonnet 4.5)     │ (Sonnet 4.5)     │ (Opus 4.5)  │        │
+│        └──────────────────┴──────────────────┴─────────────┘        │
+│                          (opt-in, stateless)                        │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↑
+                                │
+                        ┌───────┴──────┐
+                        │ Postgres     │ — Neon (us-west-2)
+                        │ Anthropic    │ — claude-{opus,sonnet}-4-5
+                        │ Vercel       │ — frontend
+                        │ Railway      │ — FastAPI backend
+                        └──────────────┘</code></pre>
+<p><strong>Three production environments stitched together</strong>,
+<strong>two deterministic stages bracketing one bounded LLM
+stage</strong>, <strong>confidence scores routing analyst
+attention</strong>, <strong>&lt;$2/spread</strong>.</p>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SpreadSense — Plain-English Explainer</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SpreadSense — Plain-English Explainer</h1>
+</header>
+<h1 id="spreadsense-a-plain-english-walkthrough">SpreadSense — A
+Plain-English Walkthrough</h1>
+<p><strong>For:</strong> Anyone curious about what SpreadSense actually
+does — credit officers, bankers, prospective users, family members
+trying to understand what you’ve been building. <strong>Reading
+time:</strong> 5 minutes. <strong>No jargon.</strong> Where a banking
+term is unavoidable, it’s explained on first use.</p>
+<hr />
+<h2 id="what-problem-does-spreadsense-solve">What problem does
+SpreadSense solve?</h2>
+<p>Every commercial bank loan starts with the same boring chore.</p>
+<p>A business applies for a loan. The bank’s analyst gets a stack of the
+company’s financial statements — usually three documents, often as
+PDFs:</p>
+<ol type="1">
+<li><strong>Income Statement</strong> — what the company earned and
+spent</li>
+<li><strong>Balance Sheet</strong> — what it owns and owes</li>
+<li><strong>Cash Flow Statement</strong> — where its cash actually came
+from and went</li>
+</ol>
+<p>The analyst then types every number from those PDFs into a
+spreadsheet. Just typing. Hundreds of numbers, line by line, for two or
+three years of history. This process is called
+<strong>spreading</strong>, and at most banks it takes 2 to 4 hours per
+loan.</p>
+<p>It’s tedious, error-prone, and easy to outsource to AI. That’s what
+SpreadSense does.</p>
+<hr />
+<h2 id="the-30-second-pitch">The 30-second pitch</h2>
+<blockquote>
+<p>Upload the company’s PDF. Wait 30 seconds. Review the AI’s extracted
+numbers (color-coded by how confident the AI is). Click confirm. The
+numbers are now in your spreadsheet.</p>
+</blockquote>
+<p>That’s it. What used to take 4 hours takes 4 minutes.</p>
+<hr />
+<h2 id="how-it-works-end-to-end">How it works, end to end</h2>
+<h3 id="step-1-upload">Step 1: Upload</h3>
+<p>You drag the borrower’s annual report PDF into a panel on screen. The
+system accepts it immediately and starts processing in the background —
+you don’t sit and wait for a single big “Submit” button.</p>
+<h3 id="pulling-a-10-k-straight-from-sec">Pulling a 10-K straight from
+SEC</h3>
+<p>If the borrower is a public US company, you don’t need to download
+the filing yourself. In the spread page, type the ticker
+(e.g. <code>msft</code>), pick 10-K or 10-Q, and click <strong>Fetch
+latest 10K/Q</strong>. SpreadSense pulls the latest filing from SEC
+EDGAR, renders it to PDF (10–30 seconds for a typical 10-K), and
+downloads it to your machine. Then upload it through the regular
+flow.</p>
+<h3 id="step-2-watch-the-progress-bar">Step 2: Watch the progress
+bar</h3>
+<p>A progress strip walks through five phases live: -
+<strong>Uploading</strong> the file - <strong>Parsing</strong> the PDF
+text - Extracting the <strong>Income Statement</strong> - Extracting the
+<strong>Balance Sheet</strong> - Extracting the <strong>Cash Flow
+Statement</strong></p>
+<p>Each phase ticks off in real time. If anything goes wrong (e.g. the
+PDF is just a scanned image with no readable text), you get a clear
+error within seconds — not silent failure 5 minutes later.</p>
+<h3 id="step-3-review-the-ais-work">Step 3: Review the AI’s work</h3>
+<p>Once extraction finishes, you see a table of every line item the AI
+pulled out. Each row is color-coded:</p>
+<ul>
+<li><strong>Green (HIGH confidence)</strong> — the AI is sure. Just
+looks right. Skip past these.</li>
+<li><strong>Yellow (MED confidence)</strong> — the AI found something
+but isn’t certain. The number is pre-filled in an editable box; glance
+and adjust if needed.</li>
+<li><strong>Red (LOW confidence)</strong> — the AI struggled. The box is
+empty and waiting for you. The “Confirm” button is grayed out until you
+fill these in.</li>
+</ul>
+<p>The whole table is sorted with red rows on top, so you focus your
+attention exactly where it’s needed. No hunting.</p>
+<h3 id="step-4-confirm">Step 4: Confirm</h3>
+<p>One click writes everything — both your manual entries and the AI’s
+extracted values — into the actual spread grid. Subtotals (gross profit,
+EBITDA, total assets, etc.) compute automatically. Ratios (debt service
+coverage, leverage, liquidity) are now ready for the credit memo.</p>
+<h3 id="skip-the-pdf-entirely-pull-from-quickbooks">Skip the PDF
+entirely — pull from QuickBooks</h3>
+<p>For private SMB borrowers, most financials never live in a PDF. They
+live in the borrower’s accounting software. SpreadSense offers a third
+upload option: <strong>Connect QuickBooks</strong>. Click it, the system
+pretends to authenticate (today: stubbed; v2 ships real Intuit OAuth),
+pick the period, and the trial balance flows in directly — no OCR, no
+review queue, no PDF round trip. This is how nCino and Validis-style
+products handle SMB lending; SpreadSense’s lane is to add AI reasoning
+on top.</p>
+<h3 id="after-the-spread-is-built-three-new-ai-moves">After the spread
+is built — three new AI moves</h3>
+<p>Once your spread has at least two periods of data, two AI tools light
+up on the <strong>Analytics tab</strong>:</p>
+<p><strong>1. Variance Commentary.</strong> Click
+<code>✨ Explain changes</code>. In about 12 seconds, Claude returns 4–6
+categorized bullets identifying the most material period-over-period
+changes — quantified, skeptical, and ending with a forward-looking
+“Watch:” bullet on what could matter next quarter. Sample output on a
+stressed borrower:</p>
+<blockquote>
+<ul>
+<li>Net sales fell 9.3% YoY ($3.22B → $2.92B), while net income
+collapsed 51.5% — operating leverage deterioration.</li>
+<li>AR rose 18.5% on falling revenue; DSO 58 → 76 days, suggesting
+collection issues or aggressive recognition.</li>
+<li>Interest coverage dropped from 158x to 6.4x — new long-term debt of
+~$298M and equity destruction of $463M materially weakened the balance
+sheet.</li>
+<li><strong>Watch:</strong> if AR continues growing faster than sales or
+working capital absorbs more cash, expect covenant pressure or liquidity
+stress.</li>
+</ul>
+</blockquote>
+<p>That’s a junior analyst’s first credit memo pass — done in 12
+seconds.</p>
+<p><strong>2. Ask the Filing.</strong> A free-text Q&amp;A box right
+under the variance card. Type any question about the borrower’s filing —
+risk factors, debt maturity schedule, related-party transactions,
+MD&amp;A liquidity language, segment commentary — and SpreadSense
+answers from the actual document text with a section-level citation.
+This is the part QuikSpread structurally can’t do: their tool reads
+tables; SpreadSense reads prose.</p>
+<p><strong>3. Excel export.</strong> Top-right of the spread page, click
+<code>⬇ Export Excel</code>. A workbook with one sheet per statement,
+period columns side by side, total rows highlighted, downloads in &lt;1
+second. Hand it to the credit committee as-is.</p>
+<hr />
+<h2 id="what-makes-the-ai-part-actually-work">What makes the AI part
+actually work</h2>
+<p>The hard part isn’t “ask Claude to read the PDF.” The hard part is
+making it reliably find the right numbers in a 150-page filing without
+going off the rails.</p>
+<p>A few things SpreadSense does behind the scenes that you’d never
+notice as a user:</p>
+<ul>
+<li><p><strong>Smart slicing.</strong> A typical SEC 10-K filing is
+~400,000 characters of text. The actual financial statements live around
+character 270,000 — page 110 or so. SpreadSense automatically locates
+“Consolidated Balance Sheet” in the document and sends only the
+surrounding 100,000 characters to the AI. This makes the AI faster,
+cheaper, and more accurate (it doesn’t get distracted by 80 pages of
+risk factors).</p></li>
+<li><p><strong>Field labels in the prompt.</strong> The AI doesn’t see
+“extract <code>cost_of_goods_sold</code>” — it sees “extract
+<code>cost_of_goods_sold</code> (Cost of Goods Sold), which on a SaaS
+10-K typically appears as ‘Cost of revenues’.” This contextual hint
+dramatically improves how reliably the AI maps document terminology to
+your bank’s RMA template.</p></li>
+<li><p><strong>Honest uncertainty.</strong> The AI returns a confidence
+score with every number. SpreadSense surfaces that directly to the
+analyst as the green/yellow/red color coding — instead of pretending the
+AI is always right.</p></li>
+<li><p><strong>Refusal over hallucination.</strong> If the AI can’t find
+a field, it returns <code>null</code> with low confidence — not a
+made-up number. Better to ask a human than to invent a balance sheet
+figure.</p></li>
+</ul>
+<hr />
+<h2 id="what-it-looks-like-in-practice">What it looks like in
+practice</h2>
+<p>We tested SpreadSense against DocuSign’s actual 2026 annual filing —
+a real 157-page SEC 10-K. Here’s what the AI extracted:</p>
+<table>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Lines extracted</th>
+<th>Confidence on extracted lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Income Statement</td>
+<td>6 of 7</td>
+<td>Mostly HIGH (95%)</td>
+</tr>
+<tr>
+<td>Balance Sheet</td>
+<td>10 of 13</td>
+<td>Mostly HIGH (90-95%)</td>
+</tr>
+<tr>
+<td>Cash Flow</td>
+<td>7 of 13</td>
+<td>Mix of HIGH and MED</td>
+</tr>
+</tbody>
+</table>
+<p>The lines that came back empty (inventory, dividends, etc.) are
+correct — DocuSign as a SaaS company genuinely doesn’t have those. The
+AI flagged them as “I’m 90% confident this field doesn’t exist in this
+document,” which is the right answer.</p>
+<p>Total extraction time: under 30 seconds. An analyst’s review of the 9
+yellow/red rows takes maybe 2 minutes. Total spread time: <strong>~3
+minutes</strong> instead of 4 hours.</p>
+<hr />
+<h2 id="where-spreadsense-fits-in-the-analysts-day">Where SpreadSense
+fits in the analyst’s day</h2>
+<p>A typical credit deal in this product looks like:</p>
+<ol type="1">
+<li><strong>Borrower setup</strong> (1 min) — Add the company name,
+fiscal year-end, basic identifiers.</li>
+<li><strong>Spread creation</strong> (30 sec) — Open a spread for this
+deal.</li>
+<li><strong>Per-period extraction</strong> (3 min × number of years) —
+Upload each year’s PDF, review, confirm.</li>
+<li><strong>Ratio review</strong> (auto) — Liquidity, leverage, coverage
+ratios compute themselves the moment numbers are entered. Breach alerts
+appear if any threshold is crossed.</li>
+<li><strong>Narrative generation</strong> (30 sec) — Click “Generate” —
+the AI writes a draft credit memo narrative using the spread numbers +
+computed ratios as context.</li>
+<li><strong>Edit + export</strong> (10 min) — Analyst polishes the
+narrative, marks the deal “completed”, exports a PDF credit memo.</li>
+</ol>
+<p>The whole loop, for a single-period deal, is roughly <strong>15
+minutes from PDF upload to committee-ready memo PDF</strong>.</p>
+<hr />
+<h2 id="what-it-deliberately-does-not-do-yet">What it deliberately does
+NOT do (yet)</h2>
+<ul>
+<li><strong>It doesn’t replace the analyst.</strong> Every extraction
+goes through human confirmation. Every narrative is editable. The AI is
+a fast first draft, not the final word.</li>
+<li><strong>It doesn’t approve loans.</strong> Decisioning stays with
+credit committees.</li>
+<li><strong>It doesn’t store sensitive PDFs long-term.</strong> Files
+are processed in memory; only the extracted numbers and
+analyst-confirmed values persist.</li>
+<li><strong>It doesn’t pretend to know everything.</strong> If the AI is
+uncertain, it says so loudly via the confidence color. If the document
+is unreadable (e.g. a scanned image), it fails fast with a clear
+error.</li>
+<li><strong>It doesn’t connect to your loan origination system
+yet.</strong> That’s on the GA roadmap.</li>
+</ul>
+<hr />
+<h2 id="who-its-built-for">Who it’s built for</h2>
+<ul>
+<li><strong>Credit Analyst (the daily user).</strong> Spends most of
+their time spreading and writing memos. SpreadSense compresses
+both.</li>
+<li><strong>Senior Credit Analyst / Credit Officer.</strong> Reviews and
+approves analyst work. Gets a portfolio dashboard with breach alerts and
+pending-review queues.</li>
+<li><strong>Bank Administrator / IT.</strong> Cares about deployment,
+audit logs, and access control. SpreadSense runs as a standard web app —
+frontend on Vercel, backend on Railway, database on Neon-managed
+Postgres. No infrastructure to maintain.</li>
+</ul>
+<hr />
+<h2 id="where-to-see-it">Where to see it</h2>
+<ul>
+<li><strong>Live demo:</strong> https://spreadsense.vercel.app</li>
+<li><strong>Source code:</strong>
+https://github.com/arunr-mib/spreadsense (private)</li>
+<li><strong>Full PRD:</strong> <a
+href="./SpreadSense-AI-PRD.md"><code>docs/SpreadSense-AI-PRD.md</code></a></li>
+<li><strong>Extraction architecture deep-dive:</strong> <a
+href="./superpowers/specs/2026-04-19-extraction-upload-confidence-design.md"><code>docs/superpowers/specs/2026-04-19-extraction-upload-confidence-design.md</code></a></li>
+</ul>
+<hr />
+<h2 id="tldr">TL;DR</h2>
+<p>SpreadSense turns a 4-hour PDF-typing chore into a 4-minute
+review-and-click. It uses Anthropic’s Claude API to read financial
+statements, returns confidence scores so analysts know where to focus,
+and writes the cleaned-up numbers into a structured spreadsheet ready
+for ratio analysis and credit memo generation.</p>
+<p>The AI does the typing. The human does the judgment. That’s the whole
+product.</p>
+</body>
+</html>
