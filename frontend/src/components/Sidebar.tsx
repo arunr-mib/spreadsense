@@ -12,7 +12,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: '📋', label: 'Deals', path: '/' },
+  { icon: '📋', label: 'Spreads', path: '/' },
   { icon: '🏢', label: 'Borrowers', path: '/borrowers' },
   { icon: '📊', label: 'Portfolio', path: '/dashboard', adminOnly: true },
 ]

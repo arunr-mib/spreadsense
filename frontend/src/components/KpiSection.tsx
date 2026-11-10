@@ -47,27 +47,35 @@ function formatRatio(key: string, val: number | null): string {
   return `${val.toFixed(2)}x`
 }
 
-function cellColor(key: string, period: PeriodAnalytics): string {
+// A null ratio has not been evaluated against anything — it is neither
+// passing nor failing, so it must never render in pass-green. Every caller
+// below checks `val === null` first and falls back to a neutral tone before
+// ever consulting `breaches`/`near_threshold`, which only describe ratios
+// that were actually computed.
+function cellColor(key: string, period: PeriodAnalytics, val: number | null): string {
   if (!THRESHOLD_KEYS.has(key)) return 'text-[var(--text-primary)]'
+  if (val === null) return 'text-[var(--text-secondary)]'
   if (period.breaches.includes(key)) return 'text-[var(--breach)] font-bold'
   if (period.near_threshold.includes(key)) return 'text-[var(--near)] font-semibold'
   return 'text-[var(--pass)] font-semibold'
 }
 
-function cardBorderColor(key: string, period: PeriodAnalytics): string {
+function cardBorderColor(key: string, period: PeriodAnalytics, val: number | null): string {
+  if (val === null) return 'border-t-[var(--border)]'
   if (period.breaches.includes(key)) return 'border-t-[var(--breach)]'
   if (period.near_threshold.includes(key)) return 'border-t-[var(--near)]'
   return 'border-t-[var(--pass)]'
 }
 
 function cardStatusText(key: string, period: PeriodAnalytics, val: number | null): string {
-  if (val === null) return '—'
+  if (val === null) return 'not yet computed'
   if (period.breaches.includes(key)) return '⚠ breach'
   if (period.near_threshold.includes(key)) return '~ near threshold'
   return '✓ passing'
 }
 
-function cardStatusColor(key: string, period: PeriodAnalytics): string {
+function cardStatusColor(key: string, period: PeriodAnalytics, val: number | null): string {
+  if (val === null) return 'text-[var(--text-secondary)]'
   if (period.breaches.includes(key)) return 'text-[var(--breach)]'
   if (period.near_threshold.includes(key)) return 'text-[var(--near)]'
   return 'text-[var(--pass)]'
@@ -126,7 +134,7 @@ export default function KpiSection({ spreadId }: Props) {
             return (
               <div
                 key={key}
-                className={`bg-[var(--bg-card)] rounded-xl p-4 border-t-4 border border-[var(--border)] ${cardBorderColor(key, latestActual)}`}
+                className={`bg-[var(--bg-card)] rounded-xl p-4 border-t-4 border border-[var(--border)] ${cardBorderColor(key, latestActual, val)}`}
               >
                 <div className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
                   {label}
@@ -134,7 +142,7 @@ export default function KpiSection({ spreadId }: Props) {
                 <div className="text-2xl font-black text-[var(--text-primary)] leading-tight mb-1">
                   {formatRatio(key, val)}
                 </div>
-                <div className={`text-[11px] font-semibold ${cardStatusColor(key, latestActual)}`}>
+                <div className={`text-[11px] font-semibold ${cardStatusColor(key, latestActual, val)}`}>
                   {cardStatusText(key, latestActual, val)}
                 </div>
                 <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">{threshold}</div>
@@ -221,7 +229,7 @@ export default function KpiSection({ spreadId }: Props) {
                   .map((p) => (
                     <td
                       key={p.period_id}
-                      className={`px-4 py-3 text-right text-xs ${cellColor(key, p)}`}
+                      className={`px-4 py-3 text-right text-xs ${cellColor(key, p, p.ratios[key])}`}
                     >
                       {formatRatio(key, p.ratios[key])}
                     </td>
