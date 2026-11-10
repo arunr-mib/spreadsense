@@ -31,6 +31,16 @@ dev = [
     "pytest-cov>=5.0",
 ]
 
+# Without this, `pip install -e .` fails outright: setuptools' flat-layout
+# auto-discovery sees `app/` and `migrations/` as two top-level packages and
+# refuses to guess which one(s) belong in the distribution. The Dockerfile
+# never hit this — it installs before `COPY backend/ ./` adds `migrations/`,
+# so only `app/` existed yet. CI checks out the whole repo first, so
+# `pip install -e .` always saw both and always failed before a single test
+# ran. `app` is the only thing this package needs to ship.
+[tool.setuptools.packages.find]
+include = ["app*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
