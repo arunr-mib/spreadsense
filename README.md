@@ -65,4 +65,4 @@ In active development. See the [PRD launch plan](./docs/SpreadSense-AI-PRD.md#14
 
 ## License
 
-Proprietary — internal use only.
+MIT — see [`LICENSE`](./LICENSE).
