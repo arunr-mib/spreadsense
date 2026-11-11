@@ -170,7 +170,7 @@ export default function LoginPage() {
               <p className="text-[15px] lg:text-[17px] text-white/75 leading-relaxed mb-8 max-w-xl">
                 AI-native financial spreading for commercial credit analysts.
                 Read borrower 10-Ks, audited financials, and trial balances
-                end-to-end — statements, footnotes, MD&amp;A — and walk into
+                end-to-end (statements, footnotes, MD&amp;A) and walk into
                 credit committee with a confidence-coded spread, AI variance
                 commentary, and a free-text Q&amp;A surface over the source.
               </p>
@@ -322,15 +322,15 @@ export default function LoginPage() {
             <p className="text-lg text-slate-600 leading-relaxed">
               Most "AI auto-spreading" pipelines are an unbounded LLM with
               hopes attached. Ours is a tight pipeline where the language
-              model has one job — read pre-located financial-statement text
-              — and Python handles everything else.
+              model has one job, reading pre-located financial-statement text,
+              and Python handles everything else.
             </p>
           </Reveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             <Reveal delay={0}><StepCard step="01" title="Source" desc="Upload a PDF, fetch a 10-K from SEC EDGAR by ticker, or pull a trial balance directly from QuickBooks." tag="3 paths" /></Reveal>
             <Reveal delay={120}><StepCard step="02" title="Smart slice" desc="A regex locates the financial statements section in a 400K-char filing and trims to a 100K-char window. ~75% token-cost cut." tag="Deterministic" /></Reveal>
-            <Reveal delay={240}><StepCard step="03" title="Claude extraction" desc="Three focused calls — IS, BS, CF — each emit structured field values with confidence scores. Refuses to invent missing fields." tag="Claude Opus 4.5" /></Reveal>
+            <Reveal delay={240}><StepCard step="03" title="Claude extraction" desc="Three focused calls (IS, BS, CF) each emit structured field values with confidence scores. Refuses to invent missing fields." tag="Claude Opus 4.5" /></Reveal>
             <Reveal delay={360}><StepCard step="04" title="Reviewed spread" desc="LOW-confidence rows route to the analyst's review queue first. One click confirms; ratios + subtotals compute deterministically." tag="Human-in-loop" /></Reveal>
           </div>
         </div>
@@ -467,13 +467,13 @@ export default function LoginPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <Reveal delay={0}>
               <FeatureBlock kicker="AI commentary" title="Variance Commentary"
-                desc="Two periods in, four to six credit-grade bullets out. DSO drift, interest coverage, quality of earnings — categorized and ending with a forward-looking watchpoint. ~12 seconds."
+                desc="Two periods in, four to six credit-grade bullets out. DSO drift, interest coverage, quality of earnings, categorized and ending with a forward-looking watchpoint. ~12 seconds."
                 example={<em>"AR rose 18.5% on falling revenue; DSO 58→76 days, suggesting collection issues or aggressive recognition."</em>} />
             </Reveal>
             <Reveal delay={120}>
               <FeatureBlock kicker="Q&A surface" title="Ask the Filing"
-                desc="Free-text Q&A grounded in the actual extracted text. Risk factors, debt maturity, MD&A liquidity, related-party transactions — answered with section-level citations."
-                example={<em>"$750M revolving facility maturing May 2030 with no outstanding borrowings. Source: Note 8 — Debt."</em>} />
+                desc="Free-text Q&A grounded in the actual extracted text. Risk factors, debt maturity, MD&A liquidity, related-party transactions, answered with section-level citations."
+                example={<em>"$750M revolving facility maturing May 2030 with no outstanding borrowings. Source: Note 8, Debt."</em>} />
             </Reveal>
             <Reveal delay={240}>
               <FeatureBlock kicker="Direct ingestion" title="QuickBooks · SEC · PDF"
@@ -540,7 +540,7 @@ export default function LoginPage() {
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-700 mb-3">Try it now</div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-5">Sign in. Spread a 10-K. Watch the AI explain the variances.</h2>
             <p className="text-lg text-slate-600 leading-relaxed mb-6">
-              Two demo accounts pre-loaded with DocuSign and Microsoft data. Open the spread, switch to the KPIs tab, click <span className="font-semibold text-slate-900">Explain changes</span> — about 12 seconds later you have credit-committee-ready bullets.
+              Two demo accounts pre-loaded with DocuSign and Microsoft data. Open the spread, switch to the KPIs tab, click <span className="font-semibold text-slate-900">Explain changes</span>, and about 12 seconds later you have credit-committee-ready bullets.
             </p>
             <ul className="space-y-3 text-[15px] text-slate-700">
               {[
@@ -744,7 +744,7 @@ function SpreadMockup() {
             <MockBullet category="margins" text="Gross margin compressed 280 bps from 79.4% to 76.6% on flat opex." />
             <MockBullet
               category="working_capital"
-              text="AR rose 18.5% on falling revenue — DSO 58 → 76 days. Possible collection issues."
+              text="AR rose 18.5% on falling revenue, DSO 58 → 76 days. Possible collection issues."
             />
             <MockBullet
               category="watch"
