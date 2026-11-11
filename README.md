@@ -1,4 +1,4 @@
-# SpreadSense — Financial Spreading Tool
+# SpreadSense, Financial Spreading Tool
 
 AI-powered financial spreading platform: upload PDF financials → Claude extracts to the RMA template → reviewer confirms → spreads written to a structured grid.
 
@@ -8,10 +8,10 @@ Built for bank credit analysts to compress hours of manual spreading into minute
 
 ## Documentation
 
-- **[Plain-English explainer](./docs/SpreadSense-Explainer.md)** — 5-minute walkthrough of what SpreadSense does and how it works
-- **[Product Requirements Document](./docs/SpreadSense-AI-PRD.md)** — full PRD covering goals, personas, requirements, architecture, and roadmap
-- **[Design specs](./docs/superpowers/specs/)** — feature-level design documents
-- **[Implementation plans](./docs/superpowers/plans/)** — task-by-task execution plans
+- **[Plain-English explainer](./docs/SpreadSense-Explainer.md)**, 5-minute walkthrough of what SpreadSense does and how it works
+- **[Product Requirements Document](./docs/SpreadSense-AI-PRD.md)**, full PRD covering goals, personas, requirements, architecture, and roadmap
+- **[Design specs](./docs/superpowers/specs/)**, feature-level design documents
+- **[Implementation plans](./docs/superpowers/plans/)**, task-by-task execution plans
 
 ## Stack
 
@@ -45,13 +45,13 @@ docker compose up --build
 ## Running Tests
 
 ```bash
-# Inside the backend container — uses dedicated fst_test_db, never touches dev data
+# Inside the backend container, uses dedicated fst_test_db, never touches dev data
 docker compose exec backend sh -c "cd /app && python -m pytest tests/ -v"
 ```
 
 ## Helper Scripts
 
-- **[`scripts/fetch_10k_pdf.py`](./scripts/fetch_10k_pdf.py)** — pulls any company's most recent 10-K from SEC EDGAR and renders it via Chrome headless to a multi-page text-layer PDF for testing the extraction pipeline.
+- **[`scripts/fetch_10k_pdf.py`](./scripts/fetch_10k_pdf.py)**, pulls any company's most recent 10-K from SEC EDGAR and renders it via Chrome headless to a multi-page text-layer PDF for testing the extraction pipeline.
 
   ```bash
   python3 scripts/fetch_10k_pdf.py docu       # DocuSign (default)
@@ -65,4 +65,4 @@ In active development. See the [PRD launch plan](./docs/SpreadSense-AI-PRD.md#14
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE).
+MIT, see [`LICENSE`](./LICENSE).
